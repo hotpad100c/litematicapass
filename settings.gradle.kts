@@ -21,7 +21,8 @@ stonecutter {
             "1.21.8",
             "1.21.5",
             "1.21.4",
-            "1.21.3"
+            "1.21.3",
+            "1.21.1"
         ).buildscript("build.gradle.kts")
         versions(
             "26.3",

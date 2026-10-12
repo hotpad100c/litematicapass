@@ -47,7 +47,7 @@ public final class SceneDepth {
 		if (target == null) {
 			target = Gpu.depthTarget(label, width, height);
 		} else if (target.width != width || target.height != height) {
-			target.resize(width, height);
+			Gpu.resize(target, width, height);
 		}
 		Gpu.copyDepth(target, main);
 		return target;

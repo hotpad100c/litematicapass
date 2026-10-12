@@ -101,10 +101,22 @@ final class Gpu {
 		/*return new TextureTarget(label, width, height, true, GpuFormat.RGBA8_UNORM);
 		*///?} else if >=1.21.5 {
 		/*return new TextureTarget(label, width, height, true);
-		*///?} else {
+		*///?} else if >=1.21.2 {
 		/*TextureTarget target = new TextureTarget(width, height, true);
 		target.setClearColor(0, 0, 0, 0);
 		return target;
+		*///?} else {
+		/*TextureTarget target = new TextureTarget(width, height, true, Minecraft.ON_OSX);
+		target.setClearColor(0, 0, 0, 0);
+		return target;
+		*///?}
+	}
+
+	static void resize(RenderTarget target, int width, int height) {
+		//? if >=1.21.2 {
+		target.resize(width, height);
+		//?} else {
+		/*target.resize(width, height, Minecraft.ON_OSX);
 		*///?}
 	}
 
@@ -131,12 +143,22 @@ final class Gpu {
 		int readFramebuffer = GL11.glGetInteger(GL30.GL_READ_FRAMEBUFFER_BINDING);
 		int[] viewport = new int[4];
 		GL11.glGetIntegerv(GL11.GL_VIEWPORT, viewport);
-		target.clear();
+		clearUnbound(target);
 		GlStateManager._glBindFramebuffer(GL30.GL_DRAW_FRAMEBUFFER, drawFramebuffer);
 		GlStateManager._glBindFramebuffer(GL30.GL_READ_FRAMEBUFFER, readFramebuffer);
 		GlStateManager._viewport(viewport[0], viewport[1], viewport[2], viewport[3]);
 		*///?}
 	}
+
+	//? if <1.21.5 && >=1.21.2 {
+	/*private static void clearUnbound(RenderTarget target) {
+		target.clear();
+	}
+	*///?} else if <1.21.2 {
+	/*private static void clearUnbound(RenderTarget target) {
+		target.clear(Minecraft.ON_OSX);
+	}
+	*///?}
 
 	/** Copies the depth of {@code source} into {@code target}. */
 	static void copyDepth(RenderTarget target, RenderTarget source) {

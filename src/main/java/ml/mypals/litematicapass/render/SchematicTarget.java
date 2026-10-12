@@ -75,7 +75,7 @@ public final class SchematicTarget {
 		if (target == null) {
 			target = Gpu.colorDepthTarget("litematicapass_schematic", width, height);
 		} else if (target.width != width || target.height != height) {
-			target.resize(width, height);
+			Gpu.resize(target, width, height);
 		}
 	}
 
