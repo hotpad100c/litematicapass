@@ -57,13 +57,24 @@ final class IrisHooks {
 			if (!(Iris.getPipelineManager().getPipelineNullable() instanceof LegacyIrisPipelineAccessor pipeline)) {
 				return 0;
 			}
-			//? if >=1.18 {
-			return pipeline.litematicapass$renderTargets().getDepthTexture().getTextureId();
-			//?} else {
-			/^return pipeline.litematicapass$renderTargets().getDepthTexture();
-			^///?}
+			// Most builds hand out their DepthTexture, the later ones for 1.17.1 its texture ID directly.
+			Object depth = pipeline.litematicapass$renderTargets().getDepthTexture();
+			return depth instanceof Integer id ? id : textureId(depth);
 		} finally {
 			bypass = routing;
+		}
+	}
+
+	private static java.lang.reflect.Method getTextureId;
+
+	private static int textureId(Object depthTexture) {
+		try {
+			if (getTextureId == null) {
+				getTextureId = depthTexture.getClass().getMethod("getTextureId");
+			}
+			return (int) getTextureId.invoke(depthTexture);
+		} catch (ReflectiveOperationException e) {
+			throw new IllegalStateException("Unexpected Iris depth texture " + depthTexture, e);
 		}
 	}
 	*///?}

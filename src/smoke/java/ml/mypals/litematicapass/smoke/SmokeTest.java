@@ -192,7 +192,24 @@ public final class SmokeTest implements ClientModInitializer {
 
 	private static void screenshot(Minecraft mc, String view) {
 		String name = "litematicapass-smoke-" + VERSION + "-" + view + ".png";
+		//? if >=1.18 {
 		Screenshot.grab(mc.gameDirectory, name, mc.getMainRenderTarget(), message -> log("screenshot " + name));
+		//?} else {
+		/*// 1.17 also takes the size; the 1.17.1 build runs on both, so look for whichever one there is.
+		java.util.function.Consumer<net.minecraft.network.chat.Component> done = message -> log("screenshot " + name);
+		com.mojang.blaze3d.pipeline.RenderTarget target = mc.getMainRenderTarget();
+		try {
+			try {
+				Screenshot.class.getMethod("grab", java.io.File.class, String.class, com.mojang.blaze3d.pipeline.RenderTarget.class,
+					java.util.function.Consumer.class).invoke(null, mc.gameDirectory, name, target, done);
+			} catch (NoSuchMethodException e) {
+				Screenshot.class.getMethod("grab", java.io.File.class, String.class, int.class, int.class, com.mojang.blaze3d.pipeline.RenderTarget.class,
+					java.util.function.Consumer.class).invoke(null, mc.gameDirectory, name, target.width, target.height, target, done);
+			}
+		} catch (ReflectiveOperationException e) {
+			throw new IllegalStateException("Could not take the screenshot " + name, e);
+		}
+		*///?}
 	}
 
 	private static void deleteOldWorld() {
