@@ -19,7 +19,11 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.client.gui.screens.worldselection.CreateWorldScreen;
+//? if >=1.19.4 {
 import net.minecraft.client.gui.screens.worldselection.WorldCreationUiState;
+//?} else {
+/*import net.minecraft.client.gui.components.CycleButton;
+*///?}
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -88,9 +92,18 @@ public final class SmokeTest implements ClientModInitializer {
 			return;
 		}
 		if (screen(mc) instanceof CreateWorldScreen screen) {
+			//? if >=1.19.4 {
 			WorldCreationUiState state = screen.getUiState();
 			state.setName(WORLD);
 			state.setGameMode(WorldCreationUiState.SelectedGameMode.CREATIVE);
+			//?} else {
+			/*CreateWorldScreenAccessor legacy = (CreateWorldScreenAccessor) screen;
+			legacy.litematicapass$nameEdit().setValue(WORLD);
+			CycleButton<?> mode = legacy.litematicapass$modeButton();
+			for (int i = 0; i < 4 && !"CREATIVE".equals(String.valueOf(mode.getValue())); i++) {
+				mode.onPress();
+			}
+			*///?}
 			log("creating the world");
 			this.created = true;
 			((CreateWorldScreenAccessor) screen).litematicapass$onCreate();
