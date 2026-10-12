@@ -290,12 +290,12 @@ final class Gpu {
 
 	/**
 	 * A pipeline covering the screen, sampling the given textures: one triangle with {@code core/screenquad}, or before
-	 * 1.21.6 the shared quad with {@code core/blit_screen}.
+	 * 1.21.9 (which added that shader) the shared quad with {@code core/blit_screen}.
 	 */
 	private static RenderPipeline.Builder screenQuad(String location, String fragmentShader, String... samplers) {
 		RenderPipeline.Builder builder = RenderPipeline.builder()
 			.withLocation(LitematicaPass.id(location))
-			//? if >=1.21.6 {
+			//? if >=1.21.9 {
 			.withVertexShader("core/screenquad")
 			//?} else {
 			/*.withVertexShader("core/blit_screen")
@@ -317,9 +317,9 @@ final class Gpu {
 		}
 		builder.withShaderDefine("STANDARD_DEPTH");
 		*///?}
-		//? if <26.2 && >=1.21.6 {
+		//? if <26.2 && >=1.21.9 {
 		/*builder.withVertexFormat(DefaultVertexFormat.EMPTY, VertexFormat.Mode.TRIANGLES);
-		*///?} else if <1.21.6 {
+		*///?} else if <1.21.9 {
 		/*builder.withVertexFormat(DefaultVertexFormat.POSITION, VertexFormat.Mode.QUADS);
 		*///?}
 		return builder;
@@ -373,19 +373,29 @@ final class Gpu {
 		*///?}
 	}
 
-	/** Draws the full-screen triangle (or before 1.21.6, quad) of a {@link #screenQuad} pipeline. */
+	/** Draws the full-screen triangle (or before 1.21.9, quad) of a {@link #screenQuad} pipeline. */
 	private static void drawScreenQuad(RenderPass pass) {
 		//? if >=26.2 {
 		pass.draw(3, 1, 0, 0);
-		//?} else if >=1.21.6 {
+		//?} else if >=1.21.9 {
 		/*pass.draw(0, 3);
 		*///?} else {
 		/*RenderSystem.AutoStorageIndexBuffer indices = RenderSystem.getSequentialBuffer(VertexFormat.Mode.QUADS);
 		pass.setVertexBuffer(0, RenderSystem.getQuadVertexBuffer());
 		pass.setIndexBuffer(indices.getBuffer(6), indices.type());
-		pass.drawIndexed(0, 6);
+		drawQuadIndices(pass);
 		*///?}
 	}
+
+	//? if <1.21.9 && >=1.21.6 {
+	/*private static void drawQuadIndices(RenderPass pass) {
+		pass.drawIndexed(0, 0, 6, 1);
+	}
+	*///?} else if <1.21.6 && >=1.21.5 {
+	/*private static void drawQuadIndices(RenderPass pass) {
+		pass.drawIndexed(0, 6);
+	}
+	*///?}
 	//?} else {
 	/*// Before 1.21.5 there is no RenderPipeline / RenderPass API: compile the shaders and draw with OpenGL.
 	static final class Pipeline {
