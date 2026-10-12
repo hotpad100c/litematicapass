@@ -37,6 +37,16 @@ dependencies {
     implementation("maven.modrinth:${prop("deps.malilib")}")
     implementation("maven.modrinth:${prop("deps.iris")}")
     implementation("maven.modrinth:${prop("deps.sodium")}")
+
+    // Iris nests these libraries in its jar, but the development runtime does not load the nested jars of
+    // dependencies; without them Iris fails as soon as it reads a shader pack.
+    for (library in listOf(
+        "org.anarres:jcpp:1.4.14",
+        "org.antlr:antlr4-runtime:4.13.1",
+        "io.github.douira:glsl-transformer:${prop("deps.glsl_transformer")}"
+    )) {
+        localRuntime(library) { isTransitive = false }
+    }
 }
 
 // Development-only mod that checks every mixin applies; see src/audit and `runAuditClient`.
