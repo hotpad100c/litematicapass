@@ -11,12 +11,24 @@ final class IrisHooks {
 	static boolean isRenderingShadowPass() {
 		return IrisApi.getInstance().isRenderingShadowPass();
 	}
+	//? if >=1.21.4 {
 	static boolean bypass() {
 		return ImmediateState.bypass;
 	}
 	static void setBypass(boolean bypass) {
 		ImmediateState.bypass = bypass;
 	}
+	//?} else {
+	/*// Iris 1.8.1 and older (Minecraft 1.21.3 and older) have no bypass switch; IrisShaderOverrideMixin reads ours.
+	private static boolean bypass;
+
+	static boolean bypass() {
+		return bypass;
+	}
+	static void setBypass(boolean bypass) {
+		IrisHooks.bypass = bypass;
+	}
+	*///?}
 	static boolean skipExtension() {
 		return ImmediateState.skipExtension.get();
 	}

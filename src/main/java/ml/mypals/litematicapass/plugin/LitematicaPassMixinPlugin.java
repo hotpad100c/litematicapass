@@ -15,6 +15,12 @@ public final class LitematicaPassMixinPlugin implements IMixinConfigPlugin {
 	public boolean shouldApplyMixin(String targetClassName, String mixinClassName) {
 		String name = mixinClassName.startsWith(PACKAGE) ? mixinClassName.substring(PACKAGE.length()) : mixinClassName;
 		if (name.startsWith("iris.")) {
+			if (name.equals("iris.IrisShaderOverrideMixin")) {
+				// Only Iris builds without their own bypass switch need it.
+				//? if >=1.21.4 {
+				return false;
+				//?}
+			}
 			return FabricLoader.getInstance().isModLoaded("iris");
 		}
 		if (name.equals("litematica.LegacyTerrainFixUniformMixin") || name.equals("litematica.ChunkRenderBatchDrawMixin")

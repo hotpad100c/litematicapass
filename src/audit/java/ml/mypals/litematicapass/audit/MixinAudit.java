@@ -35,8 +35,14 @@ public final class MixinAudit implements PreLaunchEntrypoint {
 	public void onPreLaunch() {
 		int failures = 0;
 		try {
-			MixinEnvironment.getCurrentEnvironment().audit();
-			System.out.println(TAG + "Mixin audit finished");
+			try {
+				MixinEnvironment.getCurrentEnvironment().audit();
+				System.out.println(TAG + "Mixin audit finished");
+			} catch (Throwable t) {
+				// Another mod's mixin can fail in the development environment only (for example a descriptor written
+				// in intermediary names without a refmap); our own targets are loaded and checked one by one below.
+				System.out.println(TAG + "note: the full Mixin audit stopped: " + t);
+			}
 			failures = checkOwnMixins();
 		} catch (Throwable t) {
 			System.out.println(TAG + "FAIL: the audit threw " + t);
@@ -77,6 +83,10 @@ public final class MixinAudit implements PreLaunchEntrypoint {
 					Class.forName(target, false, loader);
 				} catch (ClassNotFoundException e) {
 					System.out.println(TAG + "FAIL " + simple + " -> " + target + ": target class not found");
+					failures++;
+					continue;
+				} catch (Throwable t) {
+					System.out.println(TAG + "FAIL " + simple + " -> " + target + ": could not transform: " + t);
 					failures++;
 					continue;
 				}

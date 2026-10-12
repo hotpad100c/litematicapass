@@ -9,6 +9,7 @@
     "MinecraftMixin",
     "StrictValidationMixin",
     "iris.IrisRenderingPipelineMixin",
+    "iris.IrisShaderOverrideMixin",
     "litematica.ChunkRenderBatchDrawMixin",
     "litematica.ChunkRendererSchematicVboMixin",
     "litematica.LegacyTerrainFixUniformMixin",
