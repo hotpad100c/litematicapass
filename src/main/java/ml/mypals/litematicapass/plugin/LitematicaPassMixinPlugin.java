@@ -27,6 +27,14 @@ public final class LitematicaPassMixinPlugin implements IMixinConfigPlugin {
 			// would otherwise lock colour and depth writes off for the vanilla shaders the schematic draws with.
 			return FabricLoader.getInstance().isModLoaded("iris");
 		}
+		if (name.equals("litematica.WorldRendererSchematicMixin")) {
+			// From 1.21 Litematica takes the entities' buffer source as a parameter (see LitematicaRendererMixin).
+			//? if >=1.21 {
+			return false;
+			//?} else {
+			/*return true;
+			*///?}
+		}
 		return true;
 	}
 }

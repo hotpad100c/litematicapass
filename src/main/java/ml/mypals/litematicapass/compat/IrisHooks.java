@@ -6,7 +6,11 @@ import net.irisshaders.iris.vertices.ImmediateState;
 
 final class IrisHooks {
 	static boolean isPackInUse() {
+		//? if >=1.21 {
 		return Iris.isPackInUseQuick();
+		//?} else {
+		/*return IrisApi.getInstance().isShaderPackInUse();
+		*///?}
 	}
 	static boolean isRenderingShadowPass() {
 		return IrisApi.getInstance().isRenderingShadowPass();

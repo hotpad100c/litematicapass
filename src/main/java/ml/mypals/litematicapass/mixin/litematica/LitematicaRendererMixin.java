@@ -2,13 +2,16 @@ package ml.mypals.litematicapass.mixin.litematica;
 
 import com.llamalad7.mixinextras.injector.wrapmethod.WrapMethod;
 import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
-import com.mojang.blaze3d.pipeline.RenderTarget;
 import fi.dy.masa.litematica.render.LitematicaRenderer;
 import ml.mypals.litematicapass.render.SchematicEntities;
 import ml.mypals.litematicapass.render.SchematicTarget;
+//? if >=1.21 {
 import com.mojang.blaze3d.vertex.PoseStack;
 import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.util.profiling.ProfilerFiller;
+//?} else {
+/*import org.joml.Matrix4f;
+*///?}
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
@@ -33,6 +36,7 @@ public class LitematicaRendererMixin {
 	}
 
 	// 实体和方块实体画进我们自己的 buffer source，再冲到我们的目标里（见 SchematicEntities）。
+	//? if >=1.21 {
 	@WrapMethod(method = "piecewiseRenderEntities")
 	private void litematicapass$routeEntities(PoseStack matrices, MultiBufferSource.BufferSource immediate, float partialTicks, ProfilerFiller profiler,
 		Operation<Void> original) {
@@ -52,6 +56,18 @@ public class LitematicaRendererMixin {
 			original.call(matrices, immediate, effects, partialTicks, profiler);
 		}
 	}
+	//?} else {
+	/*// Before 1.21 Litematica draws entities and block entities in one call, into Minecraft's buffer source, which
+	// WorldRendererSchematicMixin swaps for ours inside drawInto.
+	@WrapMethod(method = "piecewiseRenderEntities")
+	private void litematicapass$routeEntities(Matrix4f matrix, float partialTicks, Operation<Void> original) {
+		if (SchematicTarget.isActive()) {
+			SchematicEntities.drawInto(source -> original.call(matrix, partialTicks));
+		} else {
+			original.call(matrix, partialTicks);
+		}
+	}
+	*///?}
 
 	@Inject(method = "piecewiseRenderOverlay", at = @At("HEAD"))
 	private void litematicapass$beginOverlay(CallbackInfo ci) {

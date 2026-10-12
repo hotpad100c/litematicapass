@@ -11,7 +11,8 @@
     "iris.IrisRenderingPipelineMixin",
     "iris.IrisShaderOverrideMixin",
     "litematica.LitematicaRendererMixin",
-    "litematica.RenderHandlerMixin"
+    "litematica.RenderHandlerMixin",
+    "litematica.WorldRendererSchematicMixin"
   ],
   "injectors": {
     "defaultRequire": 1

@@ -16,7 +16,8 @@ stonecutter {
     create(rootProject) {
         // See https://stonecutter.kikugie.dev/wiki/start/#choosing-minecraft-versions
         versions(
-            "1.21.1"
+            "1.21.1",
+            "1.20.6"
         ).buildscript("build.gradle.kts")
         vcsVersion = "1.21.1"
     }
