@@ -26,6 +26,7 @@ repositories {
         filter { groups.forEach(::includeGroup) }
     }
     strictMaven("https://api.modrinth.com/maven", "Modrinth", "maven.modrinth")
+    strictMaven("https://maven.fallenbreath.me/releases", "Fallen_Breath", "me.fallenbreath")
 }
 
 dependencies {
@@ -49,6 +50,8 @@ dependencies {
         localRuntime(library) { isTransitive = false }
     }
 
+    // Newer Litematica / MaLiLib builds nest this mod too (same reason as above).
+    findProperty("deps.conditional_mixin")?.let { modLocalRuntime("me.fallenbreath:conditional-mixin-fabric:$it") }
     // The mods as players install them (intermediary names), for `runProductionSmoke`.
     for (mod in listOf(
         "net.fabricmc.fabric-api:fabric-api:${prop("deps.fabric_api")}",

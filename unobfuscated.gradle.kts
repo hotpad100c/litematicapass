@@ -26,6 +26,7 @@ repositories {
         filter { groups.forEach(::includeGroup) }
     }
     strictMaven("https://api.modrinth.com/maven", "Modrinth", "maven.modrinth")
+    strictMaven("https://maven.fallenbreath.me/releases", "Fallen_Breath", "me.fallenbreath")
 }
 
 dependencies {
@@ -47,6 +48,9 @@ dependencies {
     )) {
         localRuntime(library) { isTransitive = false }
     }
+
+    // Newer Litematica / MaLiLib builds nest this mod too (same reason as above).
+    findProperty("deps.conditional_mixin")?.let { localRuntime("me.fallenbreath:conditional-mixin-fabric:$it") }
 }
 
 // Development-only mod that checks every mixin applies; see src/audit and `runAuditClient`.

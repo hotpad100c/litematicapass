@@ -2,6 +2,7 @@ package ml.mypals.litematicapass.plugin;
 
 import net.fabricmc.loader.api.FabricLoader;
 import org.objectweb.asm.tree.ClassNode;
+import org.spongepowered.asm.mixin.Mixins;
 import org.spongepowered.asm.mixin.extensibility.IMixinConfigPlugin;
 import org.spongepowered.asm.mixin.extensibility.IMixinInfo;
 
@@ -10,6 +11,13 @@ import java.util.Set;
 
 public final class LitematicaPassMixinPlugin implements IMixinConfigPlugin {
 	private static final String PACKAGE = "ml.mypals.litematicapass.mixin.";
+
+	@Override
+	public void onLoad(String mixinPackage) {
+		if (FabricLoader.getInstance().isDevelopmentEnvironment()) {
+			Mixins.registerErrorHandlerClass(DevMixinErrorHandler.class.getName());
+		}
+	}
 
 	@Override
 	public boolean shouldApplyMixin(String targetClassName, String mixinClassName) {
