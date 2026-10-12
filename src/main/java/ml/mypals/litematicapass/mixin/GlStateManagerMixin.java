@@ -1,14 +1,12 @@
 package ml.mypals.litematicapass.mixin;
 
 import org.spongepowered.asm.mixin.Mixin;
-//? if <1.21.5 {
-/*import com.mojang.blaze3d.platform.GlStateManager;
+import com.mojang.blaze3d.platform.GlStateManager;
 import ml.mypals.litematicapass.render.SchematicTarget;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.ModifyVariable;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
-*///?}
 
 /**
  * 1.21.5 之前：Litematica 的半透明覆盖层用默认混合函数绘制，其 alpha 因子是 (ONE, ZERO)，会把我们目标里已有的
@@ -17,8 +15,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
  */
 @Mixin(targets = "com.mojang.blaze3d.platform.GlStateManager")
 public class GlStateManagerMixin {
-	//? if <1.21.5 {
-	/*private static final int ONE = 1;
+	private static final int ONE = 1;
 	private static final int ONE_MINUS_SRC_ALPHA = 0x0303;
 
 	@ModifyVariable(method = "_blendFuncSeparate", at = @At("HEAD"), ordinal = 2, argsOnly = true)
@@ -38,5 +35,4 @@ public class GlStateManagerMixin {
 			ci.cancel();
 		}
 	}
-	*///?}
 }

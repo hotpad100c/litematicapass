@@ -3,7 +3,7 @@ package ml.mypals.litematicapass.render;
 import com.mojang.blaze3d.pipeline.RenderTarget;
 import com.mojang.blaze3d.pipeline.TextureTarget;
 import fi.dy.masa.litematica.config.Configs;
-import org.jspecify.annotations.Nullable;
+import org.jetbrains.annotations.Nullable;
 
 /**
  * Our own copies of the scene depth at two moments of the shader pack's frame, taken from the main depth (which the

@@ -23,53 +23,9 @@ public final class LitematicaPassMixinPlugin implements IMixinConfigPlugin {
 	public boolean shouldApplyMixin(String targetClassName, String mixinClassName) {
 		String name = mixinClassName.startsWith(PACKAGE) ? mixinClassName.substring(PACKAGE.length()) : mixinClassName;
 		if (name.startsWith("iris.")) {
-			if (name.equals("iris.IrisShaderOverrideMixin")) {
-				// Before 26.3, Iris locks colour and depth writes off for a vanilla shader whenever it would override
-				// shaders, bypass or not; while routing it must not want to override (26.3 handles the bypass itself).
-				//? if >=26.3 {
-				return false;
-				//?}
-			}
+			// Iris is optional. IrisShaderOverrideMixin keeps Iris from wanting to override shaders while routing: Iris
+			// would otherwise lock colour and depth writes off for the vanilla shaders the schematic draws with.
 			return FabricLoader.getInstance().isModLoaded("iris");
-		}
-		if (name.equals("litematica.LegacyTerrainFixUniformMixin") || name.equals("litematica.ChunkRenderBatchDrawMixin")
-			|| name.equals("StrictValidationMixin")) {
-			// Mixin rejects the whole config over a missing target class, and older Litematica / Minecraft builds lack these.
-			if (LitematicaPassMixinPlugin.class.getClassLoader().getResource(targetClassName.replace('.', '/') + ".class") == null) {
-				return false;
-			}
-		}
-		if (name.equals("MinecraftMixin") || name.equals("MinecraftAccessor")) {
-			// Only versions without RenderSystem's output target overrides route through the main target.
-			//? if >=1.21.6 {
-			return false;
-			//?} else {
-			/*return true;
-			*///?}
-		}
-		if (name.equals("GlStateManagerMixin")) {
-			// Only the OpenGL-state versions blend through GlStateManager.
-			//? if >=1.21.5 {
-			return false;
-			//?} else {
-			/*return true;
-			*///?}
-		}
-		if (name.equals("litematica.RenderUtilsMixin")) {
-			// Before 1.21.6 MinecraftMixin already routes the main target that malilib's accessor returns.
-			//? if >=1.21.6 {
-			return true;
-			//?} else {
-			/*return false;
-			*///?}
-		}
-		if (name.equals("litematica.ChunkRenderBatchDrawMixin")) {
-			// Only Litematica builds that choose the terrain output target themselves need it.
-			//? if >=26.3 {
-			return false;
-			//?} else {
-			/*return true;
-			*///?}
 		}
 		return true;
 	}

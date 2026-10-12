@@ -100,31 +100,17 @@ public final class SmokeTest implements ClientModInitializer {
 		if (!this.requestedScreen && overlay(mc) == null && this.ticks > 40) {
 			this.requestedScreen = true;
 			log("opening the create-world screen");
-			//? if >=1.21.9 {
-			CreateWorldScreen.openFresh(mc, () -> {});
-			//?} else {
-			/*CreateWorldScreen.openFresh(mc, null);
-			*///?}
+			CreateWorldScreen.openFresh(mc, null);
 		}
 	}
 
-	//? if >=26.2 {
 	private static Object screen(Minecraft mc) {
-		return mc.gui.screen();
-	}
-
-	private static Object overlay(Minecraft mc) {
-		return mc.gui.overlay();
-	}
-	//?} else {
-	/*private static Object screen(Minecraft mc) {
 		return mc.screen;
 	}
 
 	private static Object overlay(Minecraft mc) {
 		return mc.getOverlay();
 	}
-	*///?}
 
 	/**
 	 * Lifts the player into open sky facing south, places a small schematic wall in front of it and takes screenshots
@@ -182,13 +168,7 @@ public final class SmokeTest implements ClientModInitializer {
 
 	private static void screenshot(Minecraft mc, String view) {
 		String name = "litematicapass-smoke-" + VERSION + "-" + view + ".png";
-		//? if >=26.2 {
-		Screenshot.grab(mc.gameDirectory, name, mc.gameRenderer.mainRenderTarget(), 1, message -> log("screenshot " + name));
-		//?} else if >=1.21.6 {
-		/*Screenshot.grab(mc.gameDirectory, name, mc.getMainRenderTarget(), 1, message -> log("screenshot " + name));
-		*///?} else {
-		/*Screenshot.grab(mc.gameDirectory, name, mc.getMainRenderTarget(), message -> log("screenshot " + name));
-		*///?}
+		Screenshot.grab(mc.gameDirectory, name, mc.getMainRenderTarget(), message -> log("screenshot " + name));
 	}
 
 	private static void deleteOldWorld() {

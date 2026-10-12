@@ -5,12 +5,12 @@ import ml.mypals.litematicapass.compat.IrisCompat;
 import ml.mypals.litematicapass.render.DebugView;
 import ml.mypals.litematicapass.render.SchematicTarget;
 import net.fabricmc.api.ClientModInitializer;
-import net.fabricmc.fabric.api.client.command.v2.ClientCommands;
+import net.fabricmc.fabric.api.client.command.v2.ClientCommandManager;
 import net.fabricmc.fabric.api.client.command.v2.ClientCommandRegistrationCallback;
 import net.fabricmc.fabric.api.client.command.v2.FabricClientCommandSource;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientLifecycleEvents;
 import net.minecraft.network.chat.Component;
-import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceLocation;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -27,7 +27,7 @@ public class LitematicaPass implements ClientModInitializer {
 
 	/** {@code /litematicapass debug [view]}: show the buffers of the schematic pipeline instead of the frame. */
 	private static LiteralArgumentBuilder<FabricClientCommandSource> buildCommand() {
-		LiteralArgumentBuilder<FabricClientCommandSource> debug = ClientCommands.literal("debug")
+		LiteralArgumentBuilder<FabricClientCommandSource> debug = ClientCommandManager.literal("debug")
 			.executes(context -> {
 				context.getSource().sendFeedback(Component.literal("litematicapass debug view: " + DebugView.mode().id()));
 				for (DebugView.Mode mode : DebugView.Mode.values()) {
@@ -37,7 +37,7 @@ public class LitematicaPass implements ClientModInitializer {
 			});
 
 		for (DebugView.Mode mode : DebugView.Mode.values()) {
-			debug.then(ClientCommands.literal(mode.id()).executes(context -> {
+			debug.then(ClientCommandManager.literal(mode.id()).executes(context -> {
 				DebugView.setMode(mode);
 				context.getSource().sendFeedback(Component.literal("litematicapass debug view: " + mode.id() + " (" + mode.description + ")"));
 				if (mode != DebugView.Mode.OFF && !IrisCompat.isPackInUse()) {
@@ -47,10 +47,10 @@ public class LitematicaPass implements ClientModInitializer {
 			}));
 		}
 
-		return ClientCommands.literal(MOD_ID).then(debug);
+		return ClientCommandManager.literal(MOD_ID).then(debug);
 	}
 
-	public static Identifier id(String path) {
-		return Identifier.fromNamespaceAndPath(MOD_ID, path);
+	public static ResourceLocation id(String path) {
+		return ResourceLocation.fromNamespaceAndPath(MOD_ID, path);
 	}
 }

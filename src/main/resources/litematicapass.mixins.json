@@ -8,20 +8,16 @@
     "LevelRendererMixin",
     "MinecraftAccessor",
     "MinecraftMixin",
-    "StrictValidationMixin",
     "iris.IrisRenderingPipelineMixin",
     "iris.IrisShaderOverrideMixin",
-    "litematica.ChunkRenderBatchDrawMixin",
     "litematica.ChunkRendererSchematicVboMixin",
-    "litematica.LegacyTerrainFixUniformMixin",
     "litematica.LitematicaRendererMixin",
-    "litematica.RenderHandlerMixin",
-    "litematica.RenderUtilsMixin"
+    "litematica.RenderHandlerMixin"
   ],
   "injectors": {
     "defaultRequire": 1
   },
   "overwrites": {
     "requireAnnotations": true
-	}
+  }
 }
