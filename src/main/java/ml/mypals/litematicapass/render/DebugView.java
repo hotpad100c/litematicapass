@@ -2,18 +2,11 @@ package ml.mypals.litematicapass.render;
 
 import com.mojang.blaze3d.pipeline.RenderTarget;
 import com.mojang.blaze3d.systems.RenderSystem;
-import com.mojang.renderpearl.api.GpuFormat;
 import com.mojang.renderpearl.api.commands.RenderPass;
-import com.mojang.renderpearl.api.commands.RenderPassDescriptor;
-import com.mojang.renderpearl.api.pipeline.BindGroupLayout;
-import com.mojang.renderpearl.api.pipeline.ColorTargetState;
-import com.mojang.renderpearl.api.pipeline.PrimitiveTopology;
 import com.mojang.renderpearl.api.pipeline.RenderPipeline;
-import com.mojang.renderpearl.api.pipeline.UniformType;
 import com.mojang.renderpearl.api.textures.FilterMode;
 import com.mojang.renderpearl.api.textures.GpuSampler;
 import com.mojang.renderpearl.api.textures.GpuTextureView;
-import ml.mypals.litematicapass.LitematicaPass;
 import net.minecraft.client.renderer.RenderPipelines;
 
 import java.util.Locale;
@@ -63,20 +56,9 @@ public final class DebugView {
 	private static RenderPipeline pipeline(Mode mode) {
 		RenderPipeline pipeline = PIPELINES[mode.ordinal()];
 		if (pipeline == null) {
-			BindGroupLayout layout = BindGroupLayout.builder()
-				.withUniform("SchematicColor", UniformType.COMBINED_IMAGE_SAMPLER)
-				.withUniform("SchematicDepth", UniformType.COMBINED_IMAGE_SAMPLER)
-				.withUniform("MainDepth", UniformType.COMBINED_IMAGE_SAMPLER)
-				.withUniform("OpaqueDepth", UniformType.COMBINED_IMAGE_SAMPLER)
-				.build();
-			pipeline = RenderPipelines.register(RenderPipeline.builder()
-				.withLocation(LitematicaPass.id("pipeline/debug_view/" + mode.id()))
-				.withVertexShader("core/screenquad")
-				.withFragmentShader(LitematicaPass.id("core/debug_view"))
-				.withShaderDefine("MODE", mode.ordinal())
-				.withBindGroupLayout(layout)
-				.withColorTargetState(new ColorTargetState(Optional.empty(), GpuFormat.RGBA8_UNORM, ColorTargetState.WRITE_COLOR))
-				.withPrimitiveTopology(PrimitiveTopology.TRIANGLES)
+			pipeline = RenderPipelines.register(Gpu.colorOutput(Gpu.screenQuad("pipeline/debug_view/" + mode.id(), "core/debug_view",
+					"SchematicColor", "SchematicDepth", "MainDepth", "OpaqueDepth")
+				.withShaderDefine("MODE", mode.ordinal()), Optional.empty())
 				.build());
 			PIPELINES[mode.ordinal()] = pipeline;
 		}
@@ -87,18 +69,14 @@ public final class DebugView {
 		GpuSampler sampler = RenderSystem.getSamplerCache().getClampToEdge(FilterMode.NEAREST);
 		GpuTextureView opaque = SceneDepth.opaqueView();
         assert main.getColorTextureView() != null;
-        RenderPassDescriptor descriptor = RenderPassDescriptor.builder(() -> "litematicapass_debug_view")
-			.withColorAttachment(main.getColorTextureView())
-			.withRenderArea(new RenderPass.RenderArea(0, 0, main.width, main.height))
-			.build();
-		try (RenderPass pass = RenderSystem.getDevice().createCommandEncoder().createRenderPass(descriptor)) {
-			pass.setPipeline(RenderSystem.getCompiledPipeline(pipeline(mode)));
+		try (RenderPass pass = Gpu.openPass("litematicapass_debug_view", main.getColorTextureView(), null, main.width, main.height)) {
+			Gpu.setPipeline(pass, pipeline(mode));
 			RenderSystem.bindDefaultUniforms(pass);
-			pass.setUniform("SchematicColor", schematic.getColorTextureView(), sampler);
-			pass.setUniform("SchematicDepth", schematic.getDepthTextureView(), sampler);
-			pass.setUniform("MainDepth", main.getDepthTextureView(), sampler);
-			pass.setUniform("OpaqueDepth", opaque != null ? opaque : main.getDepthTextureView(), sampler);
-			pass.draw(3, 1, 0, 0);
+			Gpu.bindTexture(pass, "SchematicColor", schematic.getColorTextureView(), sampler);
+			Gpu.bindTexture(pass, "SchematicDepth", schematic.getDepthTextureView(), sampler);
+			Gpu.bindTexture(pass, "MainDepth", main.getDepthTextureView(), sampler);
+			Gpu.bindTexture(pass, "OpaqueDepth", opaque != null ? opaque : main.getDepthTextureView(), sampler);
+			Gpu.drawScreenQuad(pass);
 		}
 	}
 }

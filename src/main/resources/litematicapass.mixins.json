@@ -2,11 +2,12 @@
   "required": true,
   "package": "ml.mypals.litematicapass.mixin",
   "plugin": "ml.mypals.litematicapass.plugin.LitematicaPassMixinPlugin",
-  "compatibilityLevel": "JAVA_25",
+  "compatibilityLevel": "${java}",
   "client": [
     "LevelRendererMixin",
     "StrictValidationMixin",
     "iris.IrisRenderingPipelineMixin",
+    "litematica.ChunkRenderBatchDrawMixin",
     "litematica.ChunkRendererSchematicVboMixin",
     "litematica.LegacyTerrainFixUniformMixin",
     "litematica.LitematicaRendererMixin",

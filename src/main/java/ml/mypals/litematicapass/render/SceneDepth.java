@@ -2,10 +2,8 @@ package ml.mypals.litematicapass.render;
 
 import com.mojang.blaze3d.pipeline.RenderTarget;
 import com.mojang.blaze3d.pipeline.TextureTarget;
-import com.mojang.renderpearl.api.GpuFormat;
 import com.mojang.renderpearl.api.textures.GpuTextureView;
 import fi.dy.masa.litematica.config.Configs;
-import net.minecraft.client.Minecraft;
 import org.jspecify.annotations.Nullable;
 
 /**
@@ -44,11 +42,11 @@ public final class SceneDepth {
 	}
 
 	private static TextureTarget copy(@Nullable TextureTarget target, String label) {
-		RenderTarget main = Minecraft.getInstance().gameRenderer.mainRenderTarget();
+		RenderTarget main = Gpu.mainTarget();
 		int width = Math.max(1, main.width);
 		int height = Math.max(1, main.height);
 		if (target == null) {
-			target = new TextureTarget(label, width, height, null, GpuFormat.D32_FLOAT);
+			target = Gpu.depthTarget(label, width, height);
 		} else if (target.width != width || target.height != height) {
 			target.resize(width, height);
 		}

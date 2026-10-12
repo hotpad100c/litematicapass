@@ -1,31 +1,25 @@
 package ml.mypals.litematicapass.mixin.litematica;
 
-import com.llamalad7.mixinextras.injector.wrapmethod.WrapMethod;
-import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
-import com.mojang.blaze3d.pipeline.RenderTarget;
-import com.mojang.renderpearl.api.buffers.GpuBufferSlice;
 import fi.dy.masa.litematica.event.RenderHandler;
 import ml.mypals.litematicapass.render.SchematicTarget;
-import net.minecraft.client.renderer.RenderBuffers;
-import net.minecraft.client.renderer.culling.Frustum;
-import net.minecraft.client.renderer.state.level.CameraRenderState;
-import net.minecraft.util.profiling.ProfilerFiller;
-import org.joml.Vector4f;
 import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.injection.At;
+import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 /**
- * 重定向 Litematica 的选区， 校验盒等的渲染。
+ * 重定向 Litematica 的选区、校验器等的渲染。
+ * 不捕获参数，所以不依赖各个 Litematica 版本中 onRenderWorldLast 的参数列表（0.26 及更早叫 onRenderWorldLastAdvanced）。
  */
 @Mixin(value = RenderHandler.class, remap = false)
 public class RenderHandlerMixin {
-	@WrapMethod(method = "onRenderWorldLast")
-	private void litematicapass$routeBoxes(RenderTarget fb, CameraRenderState cameraState, Frustum culling, RenderBuffers buffers,
-		GpuBufferSlice terrainFog, Vector4f fogColor, ProfilerFiller profiler, Operation<Void> original) {
+	@Inject(method = { "onRenderWorldLast", "onRenderWorldLastAdvanced" }, at = @At("HEAD"))
+	private void litematicapass$beginBoxes(CallbackInfo ci) {
 		SchematicTarget.begin();
-		try {
-			original.call(fb, cameraState, culling, buffers, terrainFog, fogColor, profiler);
-		} finally {
-			SchematicTarget.end();
-		}
+	}
+
+	@Inject(method = { "onRenderWorldLast", "onRenderWorldLastAdvanced" }, at = @At("RETURN"))
+	private void litematicapass$endBoxes(CallbackInfo ci) {
+		SchematicTarget.end();
 	}
 }

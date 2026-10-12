@@ -13,7 +13,8 @@ import org.spongepowered.asm.mixin.injection.At;
  */
 @Mixin(value = RenderUtils.class, remap = false)
 public class RenderUtilsMixin {
-	@ModifyReturnValue(method = "mainTarget", at = @At("RETURN"))
+	// malilib 0.28 and older (Minecraft 26.1.x and older) call it fb().
+	@ModifyReturnValue(method = { "mainTarget", "fb" }, at = @At("RETURN"))
 	private static RenderTarget litematicapass$routeMainTarget(RenderTarget original) {
 		return SchematicTarget.targetFor(original);
 	}

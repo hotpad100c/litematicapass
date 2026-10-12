@@ -1,24 +1,21 @@
 package ml.mypals.litematicapass.mixin;
 
-import com.mojang.blaze3d.resource.GraphicsResourceAllocator;
-import com.mojang.renderpearl.api.buffers.GpuBufferSlice;
 import ml.mypals.litematicapass.render.SchematicTarget;
 import net.minecraft.client.renderer.LevelRenderer;
-import net.minecraft.client.renderer.state.level.CameraRenderState;
-import org.joml.Vector4f;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 /**
- * 在LevelRender的最后的最后，我们的目标会被合并到主目标上。
+ * 在 LevelRenderer.render 的最后，把我们的目标合并到主目标上。
+ * 不捕获参数，所以不依赖各个 Minecraft 版本中 render 的参数列表。
  */
 @Mixin(value = LevelRenderer.class, priority = 2000)
 public class LevelRendererMixin {
-	@Inject(method = "render", at = @At("RETURN"))
-	private void litematicapass$compositeSchematic(GraphicsResourceAllocator resourceAllocator, boolean renderOutline, CameraRenderState cameraState,
-		GpuBufferSlice terrainFog, Vector4f fogColor, boolean shouldRenderSky, boolean consistentDepthRequired, CallbackInfo ci) {
+	// 26.2 renamed renderLevel to render.
+	@Inject(method = { "render", "renderLevel" }, at = @At("RETURN"))
+	private void litematicapass$compositeSchematic(CallbackInfo ci) {
 		SchematicTarget.compositeAndReset();
 	}
 }

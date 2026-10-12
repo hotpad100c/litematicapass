@@ -1,8 +1,8 @@
 {
 	"schemaVersion": 1,
-	"id": "litematicapass",
+	"id": "${id}",
 	"version": "${version}",
-	"name": "LitematicaPass",
+	"name": "${name}",
 	"description": "Renders Litematica schematics into an independent render target so shader packs (Iris) no longer affect them.",
 	"authors": [
 		"Ryan100C"
@@ -24,8 +24,8 @@
 	],
 	"depends": {
 		"fabricloader": ">=0.19.5",
-		"minecraft": "~26.3",
-		"java": ">=25",
+		"minecraft": "${minecraft}",
+		"java": ">=${java}",
 		"fabric-api": "*",
 		"litematica": "*",
 		"malilib": "*"

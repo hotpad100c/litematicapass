@@ -2,11 +2,7 @@ package ml.mypals.litematicapass.render;
 
 import com.mojang.blaze3d.pipeline.RenderTarget;
 import com.mojang.blaze3d.pipeline.TextureTarget;
-import com.mojang.blaze3d.systems.RenderSystem;
-import com.mojang.renderpearl.api.GpuFormat;
 import ml.mypals.litematicapass.compat.IrisCompat;
-import net.minecraft.client.Minecraft;
-import org.joml.Vector4f;
 
 /**
  * 一个独立的 颜色+深度 渲染目标，在激活光影包时，schematic 的绘制会被重定向到这里。
@@ -63,12 +59,8 @@ public final class SchematicTarget {
 	public static RenderTarget prepareForDraw() {
 		ensureTarget();
 		if (!preparedThisFrame) {
-			RenderTarget main = Minecraft.getInstance().gameRenderer.mainRenderTarget();
-			Vector4f clear = new Vector4f(0, 0, 0, 0);
-            assert target.getColorTexture() != null;
-            assert target.getDepthTexture() != null;
-            RenderSystem.getDevice().createCommandEncoder().clearColorAndDepthTextures(
-				target.getColorTexture(), clear, target.getDepthTexture(), 0.0);
+			RenderTarget main = Gpu.mainTarget();
+			Gpu.clear(target);
 			DepthSeed.seed(main, target);
 			preparedThisFrame = true;
 		}
@@ -77,11 +69,11 @@ public final class SchematicTarget {
 	}
 
 	private static void ensureTarget() {
-		RenderTarget main = Minecraft.getInstance().gameRenderer.mainRenderTarget();
+		RenderTarget main = Gpu.mainTarget();
 		int width = Math.max(1, main.width);
 		int height = Math.max(1, main.height);
 		if (target == null) {
-			target = new TextureTarget("litematicapass_schematic", width, height, GpuFormat.RGBA8_UNORM, GpuFormat.D32_FLOAT);
+			target = Gpu.colorDepthTarget("litematicapass_schematic", width, height);
 		} else if (target.width != width || target.height != height) {
 			target.resize(width, height);
 		}
@@ -93,7 +85,7 @@ public final class SchematicTarget {
 			if (DebugView.mode() != DebugView.Mode.OFF && isActive()) {
 				showDebugView();
 			} else if (target != null && usedThisFrame) {
-				RenderTarget main = Minecraft.getInstance().gameRenderer.mainRenderTarget();
+				RenderTarget main = Gpu.mainTarget();
 				boolean saved = IrisCompat.bypass();
 				IrisCompat.setBypass(true);
 				try {
@@ -112,11 +104,10 @@ public final class SchematicTarget {
 
 	/** Replace the frame with one of the debug views; the independent target is cleared first if nothing used it. */
 	private static void showDebugView() {
-		RenderTarget main = Minecraft.getInstance().gameRenderer.mainRenderTarget();
+		RenderTarget main = Gpu.mainTarget();
 		ensureTarget();
 		if (!usedThisFrame) {
-			RenderSystem.getDevice().createCommandEncoder().clearColorAndDepthTextures(
-				target.getColorTexture(), new Vector4f(0, 0, 0, 0), target.getDepthTexture(), 0.0);
+			Gpu.clear(target);
 		}
 		boolean saved = IrisCompat.bypass();
 		IrisCompat.setBypass(true);

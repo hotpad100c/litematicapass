@@ -1,0 +1,15 @@
+{
+	"schemaVersion": 1,
+	"id": "litematicapass_audit",
+	"version": "0",
+	"name": "LitematicaPass mixin audit (development only)",
+	"environment": "client",
+	"entrypoints": {
+		"preLaunch": [
+			"ml.mypals.litematicapass.audit.MixinAudit"
+		]
+	},
+	"depends": {
+		"litematicapass": "*"
+	}
+}

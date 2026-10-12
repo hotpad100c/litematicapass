@@ -17,6 +17,18 @@ public final class LitematicaPassMixinPlugin implements IMixinConfigPlugin {
 		if (name.startsWith("iris.")) {
 			return FabricLoader.getInstance().isModLoaded("iris");
 		}
+		if (name.equals("litematica.LegacyTerrainFixUniformMixin")) {
+			// Mixin rejects the whole config over a missing target class, and older Litematica builds lack this one.
+			return LitematicaPassMixinPlugin.class.getClassLoader().getResource(targetClassName.replace('.', '/') + ".class") != null;
+		}
+		if (name.equals("litematica.ChunkRenderBatchDrawMixin")) {
+			// Only Litematica builds that choose the terrain output target themselves need it.
+			//? if >=26.3 {
+			return false;
+			//?} else {
+			/*return true;
+			*///?}
+		}
 		return true;
 	}
 }

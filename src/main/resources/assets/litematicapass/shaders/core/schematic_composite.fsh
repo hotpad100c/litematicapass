@@ -16,6 +16,14 @@ const float BEHIND_TRANSLUCENT = 0.5;
 const float TRANSLUCENT_EXISTS = 1.0005;
 const float BEHIND = 0.999;
 
+// 26.2 起深度是反向的（近 = 1，远 = 0）；更早的版本定义 STANDARD_DEPTH（近 = 0，远 = 1）。
+// 下面的比较都基于"接近度"：越大越近，远处为 0。
+#ifdef STANDARD_DEPTH
+float closeness(float depth) { return 1.0 - depth; }
+#else
+float closeness(float depth) { return depth; }
+#endif
+
 void main() {
     ivec2 pixelCoords = ivec2(gl_FragCoord.xy);
     vec4 color = texelFetch(SchematicColor, pixelCoords, 0);
@@ -23,9 +31,9 @@ void main() {
         discard;
     }
 
-    float schematicDepth = texelFetch(SchematicDepth, pixelCoords, 0).r;
-    float mainDepth = texelFetch(MainDepth, pixelCoords, 0).r;
-    float opaqueDepth = texelFetch(OpaqueDepth, pixelCoords, 0).r;
+    float schematicDepth = closeness(texelFetch(SchematicDepth, pixelCoords, 0).r);
+    float mainDepth = closeness(texelFetch(MainDepth, pixelCoords, 0).r);
+    float opaqueDepth = closeness(texelFetch(OpaqueDepth, pixelCoords, 0).r);
 
     // 只有在不透明场景前方绘制了半透明表面的地方，主深度才会比绘制半透明表面之前的深度更近。
     // 如果该表面的距离比 schematic 更近，则说明 schematic 位于其后方。
