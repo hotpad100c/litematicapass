@@ -9,9 +9,7 @@ import ml.mypals.litematicapass.render.SchematicTarget;
 import com.mojang.blaze3d.vertex.PoseStack;
 import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.util.profiling.ProfilerFiller;
-//?} else {
-/*import org.joml.Matrix4f;
-*///?}
+//?}
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
@@ -57,15 +55,16 @@ public class LitematicaRendererMixin {
 		}
 	}
 	//?} else {
-	/*// Before 1.21 Litematica draws entities and block entities in one call, into Minecraft's buffer source, which
-	// WorldRendererSchematicMixin swaps for ours inside drawInto.
-	@WrapMethod(method = "piecewiseRenderEntities")
-	private void litematicapass$routeEntities(Matrix4f matrix, float partialTicks, Operation<Void> original) {
-		if (SchematicTarget.isActive()) {
-			SchematicEntities.drawInto(source -> original.call(matrix, partialTicks));
-		} else {
-			original.call(matrix, partialTicks);
-		}
+	/*// Before 1.21 Litematica draws entities and block entities in one call (its parameters vary between builds), into
+	// Minecraft's buffer source, which WorldRendererSchematicMixin swaps for ours in between.
+	@Inject(method = "piecewiseRenderEntities", at = @At("HEAD"))
+	private void litematicapass$beginEntities(CallbackInfo ci) {
+		SchematicEntities.begin();
+	}
+
+	@Inject(method = "piecewiseRenderEntities", at = @At("RETURN"))
+	private void litematicapass$endEntities(CallbackInfo ci) {
+		SchematicEntities.end();
 	}
 	*///?}
 

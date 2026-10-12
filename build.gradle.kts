@@ -7,15 +7,17 @@ version = "${property("mod.version")}+${stonecutter.current.version}"
 group = property("mod.group") as String
 base.archivesName = property("mod.id") as String
 
-val requiredJava = JavaVersion.VERSION_21
-
 /**
  * A per-version property. `-Ptry.node=<this node> -Ptry.<name>=<value>` overrides it for this node only, to build
  * this node's code against another Minecraft version (and its dependencies).
  */
-fun prop(name: String): String =
+fun propOrNull(name: String): String? =
     (if (findProperty("try.node") == stonecutter.current.version) findProperty("try.$name") else null)?.toString()
-        ?: property(name).toString()
+        ?: findProperty(name)?.toString()
+fun prop(name: String): String = propOrNull(name) ?: property(name).toString()
+
+// The Java version Minecraft runs on: 21 from 1.20.5, 17 before (a version sets `mod.java` in its gradle.properties).
+val requiredJava = JavaVersion.toVersion(propOrNull("mod.java") ?: "21")
 repositories {
     /**
      * Restricts dependency search of the given [groups] to the [maven URL][url],

@@ -19,10 +19,11 @@ public final class SchematicEntities {
 	//?}
 	private static MultiBufferSource.BufferSource source;
 	private static boolean drawing;
+	private static boolean renderingLevelSaved;
 
 	/**
-	 * The buffer source to draw the schematic's entities into: ours inside {@link #drawInto}, else {@code original}.
-	 * For Litematica builds that take the buffer source from Minecraft's buffers themselves (before 1.21).
+	 * The buffer source to draw the schematic's entities into: ours between {@link #begin} and {@link #end}, else
+	 * {@code original}. For Litematica builds that take it from Minecraft's buffers themselves (before 1.21).
 	 */
 	public static MultiBufferSource.BufferSource routed(MultiBufferSource.BufferSource original) {
 		return drawing ? source : original;
@@ -30,6 +31,19 @@ public final class SchematicEntities {
 
 	// Lets Litematica draw into our buffer source, then flushes it into the schematic target.
 	public static void drawInto(Consumer<MultiBufferSource.BufferSource> render) {
+		begin();
+		try {
+			render.accept(source);
+		} finally {
+			end();
+		}
+	}
+
+	/** Starts drawing the schematic's entities into our buffer source (see {@link #routed}); does nothing unrouted. */
+	public static void begin() {
+		if (drawing || !SchematicTarget.isActive()) {
+			return;
+		}
 		if (source == null) {
 			//? if >=1.21 {
 			bytes = new ByteBufferBuilder(786432);
@@ -38,27 +52,30 @@ public final class SchematicEntities {
 			/*source = MultiBufferSource.immediate(new BufferBuilder(786432));
 			*///?}
 		}
-		boolean renderingLevel = IrisCompat.isRenderingLevel();
+		renderingLevelSaved = IrisCompat.isRenderingLevel();
 		SchematicTarget.begin();
+		SchematicTarget.prepareForDraw();
+		// Iris widens the vertex formats while the vertices are written, so keep it out.
+		IrisCompat.setRenderingLevel(false);
+		drawing = true;
+	}
+
+	/** Flushes what was drawn since {@link #begin} into the schematic target. */
+	public static void end() {
+		if (!drawing) {
+			return;
+		}
+		drawing = false;
 		try {
-			RenderTarget target = SchematicTarget.prepareForDraw();
-			// Iris widens the vertex formats while the vertices are written, so keep it out.
-			IrisCompat.setRenderingLevel(false);
-			drawing = true;
-			try {
-				render.accept(source);
-			} finally {
-				drawing = false;
-			}
 			// The batches reach the output target when they end; point that output at our target.
-			Runnable restore = Gpu.redirectOutput(target);
+			Runnable restore = Gpu.redirectOutput(SchematicTarget.prepareForDraw());
 			try {
 				source.endBatch();
 			} finally {
 				restore.run();
 			}
 		} finally {
-			IrisCompat.setRenderingLevel(renderingLevel);
+			IrisCompat.setRenderingLevel(renderingLevelSaved);
 			SchematicTarget.end();
 		}
 	}
