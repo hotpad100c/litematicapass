@@ -4,8 +4,6 @@
 uniform sampler2D OpaqueDepth;
 uniform sampler2D NoHandDepth;
 
-layout(location = 0) in vec2 texCoord;
-
 const float PUSH = 0.9995;
 
 // 26.2 起深度是反向的（近 = 1，远 = 0）；更早的版本定义 STANDARD_DEPTH（近 = 0，远 = 1）。

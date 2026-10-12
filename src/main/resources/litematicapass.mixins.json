@@ -5,6 +5,8 @@
   "compatibilityLevel": "${java}",
   "client": [
     "LevelRendererMixin",
+    "MinecraftAccessor",
+    "MinecraftMixin",
     "StrictValidationMixin",
     "iris.IrisRenderingPipelineMixin",
     "litematica.ChunkRenderBatchDrawMixin",

@@ -1,10 +1,8 @@
 package ml.mypals.litematicapass.render;
 
 import com.mojang.blaze3d.pipeline.RenderTarget;
-import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.renderpearl.api.commands.RenderPass;
 import com.mojang.renderpearl.api.pipeline.RenderPipeline;
-import com.mojang.renderpearl.api.textures.GpuTextureView;
 import net.minecraft.client.renderer.RenderPipelines;
 
 /**
@@ -25,21 +23,19 @@ final class DepthSeed {
 	}
 
 	static void seed(RenderTarget main, RenderTarget target) {
-		GpuTextureView opaque = SceneDepth.opaqueView();
-		GpuTextureView noHand = SceneDepth.noHandView();
+		RenderTarget opaque = SceneDepth.opaque();
+		RenderTarget noHand = SceneDepth.noHand();
 		if (opaque == null) {
-			opaque = main.getDepthTextureView();
+			opaque = main;
 		}
 		if (noHand == null) {
 			noHand = opaque;
 		}
 
-        assert target.getDepthTextureView() != null;
-		try (RenderPass pass = Gpu.openPass("litematicapass_depth_seed", Gpu.depthPassColor(target), target.getDepthTextureView(), target.width, target.height)) {
+		try (RenderPass pass = Gpu.depthPass("litematicapass_depth_seed", target)) {
 			Gpu.setPipeline(pass, pipeline());
-			RenderSystem.bindDefaultUniforms(pass);
-			Gpu.bindTexture(pass, "OpaqueDepth", opaque);
-			Gpu.bindTexture(pass, "NoHandDepth", noHand);
+			Gpu.bindDepth(pass, "OpaqueDepth", opaque);
+			Gpu.bindDepth(pass, "NoHandDepth", noHand);
 			Gpu.drawScreenQuad(pass);
 		}
 	}

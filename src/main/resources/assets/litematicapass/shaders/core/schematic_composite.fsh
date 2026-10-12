@@ -6,8 +6,6 @@ uniform sampler2D SchematicDepth;
 uniform sampler2D MainDepth;
 uniform sampler2D OpaqueDepth;
 
-layout(location = 0) in vec2 texCoord;
-
 layout(location = 0) out vec4 fragColor;
 
 // 当schematic位于场景的半透明表面后方时，其颜色会乘以该系数。

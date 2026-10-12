@@ -178,9 +178,7 @@ public final class SchematicEntities {
 }
 //?} else {
 /*import com.mojang.blaze3d.pipeline.RenderTarget;
-import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.ByteBufferBuilder;
-import com.mojang.renderpearl.api.textures.GpuTextureView;
 import ml.mypals.litematicapass.compat.IrisCompat;
 import net.minecraft.client.renderer.MultiBufferSource;
 
@@ -198,8 +196,6 @@ public final class SchematicEntities {
 			bytes = new ByteBufferBuilder(786432);
 			source = MultiBufferSource.immediate(bytes);
 		}
-		GpuTextureView savedColor = RenderSystem.outputColorTextureOverride;
-		GpuTextureView savedDepth = RenderSystem.outputDepthTextureOverride;
 		boolean renderingLevel = IrisCompat.isRenderingLevel();
 		SchematicTarget.begin();
 		try {
@@ -208,12 +204,13 @@ public final class SchematicEntities {
 			IrisCompat.setRenderingLevel(false);
 			render.accept(source);
 			// The batches reach the output target when they end; point that output at our target.
-			RenderSystem.outputColorTextureOverride = target.getColorTextureView();
-			RenderSystem.outputDepthTextureOverride = target.getDepthTextureView();
-			source.endBatch();
+			Runnable restore = Gpu.redirectOutput(target);
+			try {
+				source.endBatch();
+			} finally {
+				restore.run();
+			}
 		} finally {
-			RenderSystem.outputColorTextureOverride = savedColor;
-			RenderSystem.outputDepthTextureOverride = savedDepth;
 			IrisCompat.setRenderingLevel(renderingLevel);
 			SchematicTarget.end();
 		}

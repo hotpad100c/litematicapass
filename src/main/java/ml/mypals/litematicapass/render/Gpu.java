@@ -6,13 +6,22 @@ import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.renderpearl.api.commands.RenderPass;
 import com.mojang.renderpearl.api.pipeline.BlendFunction;
 import com.mojang.renderpearl.api.pipeline.RenderPipeline;
+//? if >=1.21.6 {
 import com.mojang.renderpearl.api.textures.GpuTextureView;
+//?} else {
+/*import com.mojang.blaze3d.textures.GpuTexture;
+*///?}
 //? if >=1.21.11 {
 import com.mojang.renderpearl.api.textures.FilterMode;
 //?}
 import ml.mypals.litematicapass.LitematicaPass;
 import net.minecraft.client.Minecraft;
 import org.jspecify.annotations.Nullable;
+//? if <1.21.6 {
+/*import com.mojang.blaze3d.platform.DestFactor;
+import com.mojang.blaze3d.platform.SourceFactor;
+import ml.mypals.litematicapass.mixin.MinecraftAccessor;
+*///?}
 //? if >=26.2 {
 import com.mojang.renderpearl.api.GpuFormat;
 import com.mojang.renderpearl.api.commands.RenderPassDescriptor;
@@ -49,13 +58,24 @@ final class Gpu {
 	/*static final double FAR_DEPTH = 1.0;
 	*///?}
 
+	/** Blending for premultiplied colour (1.21.6 added it to Minecraft; the same factors before). */
+	//? if >=1.21.6 {
+	static final BlendFunction PREMULTIPLIED_ALPHA = BlendFunction.TRANSLUCENT_PREMULTIPLIED_ALPHA;
+	//?} else {
+	/*static final BlendFunction PREMULTIPLIED_ALPHA = new BlendFunction(
+		SourceFactor.ONE, DestFactor.ONE_MINUS_SRC_ALPHA, SourceFactor.ONE, DestFactor.ONE_MINUS_SRC_ALPHA);
+	*///?}
+
 	private Gpu() {}
 
 	static RenderTarget mainTarget() {
 		//? if >=26.2 {
 		return Minecraft.getInstance().gameRenderer.mainRenderTarget();
-		//?} else {
+		//?} else if >=1.21.6 {
 		/*return Minecraft.getInstance().getMainRenderTarget();
+		*///?} else {
+		/*// Before 1.21.6 routing redirects getMainRenderTarget() (see MinecraftMixin); read the field itself.
+		return ((MinecraftAccessor) Minecraft.getInstance()).litematicapass$mainRenderTarget();
 		*///?}
 	}
 
@@ -90,11 +110,18 @@ final class Gpu {
 		*///?}
 	}
 
-	/** A pipeline drawing one full-screen triangle with {@code core/screenquad}, sampling the given textures. */
+	/**
+	 * A pipeline covering the screen, sampling the given textures: one triangle with {@code core/screenquad}, or before
+	 * 1.21.6 the shared quad with {@code core/blit_screen}.
+	 */
 	static RenderPipeline.Builder screenQuad(String location, String fragmentShader, String... samplers) {
 		RenderPipeline.Builder builder = RenderPipeline.builder()
 			.withLocation(LitematicaPass.id(location))
+			//? if >=1.21.6 {
 			.withVertexShader("core/screenquad")
+			//?} else {
+			/*.withVertexShader("core/blit_screen")
+			*///?}
 			.withFragmentShader(LitematicaPass.id(fragmentShader));
 		//? if >=26.2 {
 		BindGroupLayout.Builder layout = BindGroupLayout.builder();
@@ -110,7 +137,12 @@ final class Gpu {
 		/*for (String name : samplers) {
 			builder.withSampler(name);
 		}
-		builder.withVertexFormat(DefaultVertexFormat.EMPTY, VertexFormat.Mode.TRIANGLES).withShaderDefine("STANDARD_DEPTH");
+		builder.withShaderDefine("STANDARD_DEPTH");
+		*///?}
+		//? if <26.2 && >=1.21.6 {
+		/*builder.withVertexFormat(DefaultVertexFormat.EMPTY, VertexFormat.Mode.TRIANGLES);
+		*///?} else if <1.21.6 {
+		/*builder.withVertexFormat(DefaultVertexFormat.POSITION, VertexFormat.Mode.QUADS);
 		*///?}
 		return builder;
 	}
@@ -130,7 +162,7 @@ final class Gpu {
 	/**
 	 * Makes a pipeline that only writes depth, with the default depth test. Before 26.2 every pass needs a colour
 	 * attachment and a pipeline writes all colour channels unless told otherwise, so mask them off (see
-	 * {@link #depthPassColor}).
+	 * {@link #depthPass}).
 	 */
 	static RenderPipeline.Builder depthOnly(RenderPipeline.Builder builder) {
 		//? if >=26.2 {
@@ -143,17 +175,43 @@ final class Gpu {
 		*///?}
 	}
 
-	/** The colour attachment of a depth-only pass on {@code target}: none from 26.2, its (unwritten) colour before. */
-	static @Nullable GpuTextureView depthPassColor(RenderTarget target) {
+	/** Opens a pass drawing into the colour of {@code target}, keeping its contents. */
+	static RenderPass colorPass(String label, RenderTarget target) {
+		return openPass(label, color(target), null, target);
+	}
+
+	/**
+	 * Opens a pass drawing into the depth of {@code target}, keeping its contents. Before 26.2 every pass needs a colour
+	 * attachment, so the target's colour is attached too (see {@link #depthOnly}).
+	 */
+	static RenderPass depthPass(String label, RenderTarget target) {
 		//? if >=26.2 {
-		return null;
+		return openPass(label, null, depth(target), target);
 		//?} else {
-		/*return target.getColorTextureView();
+		/*return openPass(label, color(target), depth(target), target);
 		*///?}
 	}
 
-	/** Opens a pass over the whole of the given attachments, keeping their contents. */
-	static RenderPass openPass(String label, @Nullable GpuTextureView color, @Nullable GpuTextureView depth, int width, int height) {
+	/** Binds the colour of {@code target}; the shaders read it with {@code texelFetch}, so filtering does not matter. */
+	static void bindColor(RenderPass pass, String name, RenderTarget target) {
+		bind(pass, name, color(target));
+	}
+
+	/** Binds the depth of {@code target}; the shaders read it with {@code texelFetch}, so filtering does not matter. */
+	static void bindDepth(RenderPass pass, String name, RenderTarget target) {
+		bind(pass, name, depth(target));
+	}
+
+	//? if >=1.21.6 {
+	private static GpuTextureView color(RenderTarget target) {
+		return target.getColorTextureView();
+	}
+
+	private static GpuTextureView depth(RenderTarget target) {
+		return target.getDepthTextureView();
+	}
+
+	private static RenderPass openPass(String label, @Nullable GpuTextureView color, @Nullable GpuTextureView depth, RenderTarget size) {
 		//? if >=26.3 {
 		RenderPassDescriptor.Builder descriptor = RenderPassDescriptor.builder(() -> label);
 		//?} else if >=26.2 {
@@ -166,7 +224,7 @@ final class Gpu {
 		if (depth != null) {
 			descriptor.withDepthAttachment(depth, OptionalDouble.empty());
 		}
-		descriptor.withRenderArea(new RenderPass.RenderArea(0, 0, width, height));
+		descriptor.withRenderArea(new RenderPass.RenderArea(0, 0, size.width, size.height));
 		//?}
 		//? if >=26.3 {
 		return RenderSystem.getDevice().createCommandEncoder().createRenderPass(descriptor.build());
@@ -177,16 +235,7 @@ final class Gpu {
 		*///?}
 	}
 
-	static void setPipeline(RenderPass pass, RenderPipeline pipeline) {
-		//? if >=26.3 {
-		pass.setPipeline(RenderSystem.getCompiledPipeline(pipeline));
-		//?} else {
-		/*pass.setPipeline(pipeline);
-		*///?}
-	}
-
-	/** Binds a texture that the shaders read with {@code texelFetch}, so its filtering does not matter. */
-	static void bindTexture(RenderPass pass, String name, GpuTextureView view) {
+	private static void bind(RenderPass pass, String name, GpuTextureView view) {
 		//? if >=26.3 {
 		pass.setUniform(name, view, RenderSystem.getSamplerCache().getClampToEdge(FilterMode.NEAREST));
 		//?} else if >=1.21.11 {
@@ -195,13 +244,68 @@ final class Gpu {
 		/*pass.bindSampler(name, view);
 		*///?}
 	}
+	//?} else {
+	/*// Before 1.21.6 passes and samplers take the textures themselves (there are no texture views).
+	private static GpuTexture color(RenderTarget target) {
+		return target.getColorTexture();
+	}
+
+	private static GpuTexture depth(RenderTarget target) {
+		return target.getDepthTexture();
+	}
+
+	private static RenderPass openPass(String label, @Nullable GpuTexture color, @Nullable GpuTexture depth, RenderTarget size) {
+		return RenderSystem.getDevice().createCommandEncoder().createRenderPass(color, OptionalInt.empty(), depth, OptionalDouble.empty());
+	}
+
+	private static void bind(RenderPass pass, String name, GpuTexture texture) {
+		pass.bindSampler(name, texture);
+	}
+	*///?}
+
+	/**
+	 * Points the output of RenderType draws at {@code target}; run the returned action to undo it. 26.3 draws features
+	 * into a pass we open ourselves, and before 1.21.6 there is no such override, but while routing the schematic target
+	 * is handed out as the main target (MinecraftMixin).
+	 */
+	static Runnable redirectOutput(RenderTarget target) {
+		//? if <26.3 && >=1.21.6 {
+		/*GpuTextureView savedColor = RenderSystem.outputColorTextureOverride;
+		GpuTextureView savedDepth = RenderSystem.outputDepthTextureOverride;
+		RenderSystem.outputColorTextureOverride = target.getColorTextureView();
+		RenderSystem.outputDepthTextureOverride = target.getDepthTextureView();
+		return () -> {
+			RenderSystem.outputColorTextureOverride = savedColor;
+			RenderSystem.outputDepthTextureOverride = savedDepth;
+		};
+		*///?} else {
+		return () -> {};
+		//?}
+	}
+
+	/** Sets the pipeline and binds the default uniforms (1.21.6 and later have them). */
+	static void setPipeline(RenderPass pass, RenderPipeline pipeline) {
+		//? if >=26.3 {
+		pass.setPipeline(RenderSystem.getCompiledPipeline(pipeline));
+		//?} else {
+		/*pass.setPipeline(pipeline);
+		*///?}
+		//? if >=1.21.6 {
+		RenderSystem.bindDefaultUniforms(pass);
+		//?}
+	}
 
 	/** Draws the full-screen triangle of a {@link #screenQuad} pipeline. */
 	static void drawScreenQuad(RenderPass pass) {
 		//? if >=26.2 {
 		pass.draw(3, 1, 0, 0);
-		//?} else {
+		//?} else if >=1.21.6 {
 		/*pass.draw(0, 3);
+		*///?} else {
+		/*RenderSystem.AutoStorageIndexBuffer indices = RenderSystem.getSequentialBuffer(VertexFormat.Mode.QUADS);
+		pass.setVertexBuffer(0, RenderSystem.getQuadVertexBuffer());
+		pass.setIndexBuffer(indices.getBuffer(6), indices.type());
+		pass.drawIndexed(0, 6);
 		*///?}
 	}
 }

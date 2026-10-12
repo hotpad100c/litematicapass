@@ -1,11 +1,8 @@
 package ml.mypals.litematicapass.render;
 
 import com.mojang.blaze3d.pipeline.RenderTarget;
-import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.renderpearl.api.commands.RenderPass;
-import com.mojang.renderpearl.api.pipeline.BlendFunction;
 import com.mojang.renderpearl.api.pipeline.RenderPipeline;
-import com.mojang.renderpearl.api.textures.GpuTextureView;
 import net.minecraft.client.renderer.RenderPipelines;
 
 import java.util.Optional;
@@ -25,7 +22,7 @@ final class SchematicComposite {
 		if (pipeline == null) {
 			pipeline = RenderPipelines.register(Gpu.colorOutput(Gpu.screenQuad("pipeline/schematic_composite", "core/schematic_composite",
 					"SchematicColor", "SchematicDepth", "MainDepth", "OpaqueDepth"),
-				Optional.of(BlendFunction.TRANSLUCENT_PREMULTIPLIED_ALPHA))
+				Optional.of(Gpu.PREMULTIPLIED_ALPHA))
 				.build());
 		}
 		return pipeline;
@@ -33,15 +30,13 @@ final class SchematicComposite {
 
 	static void draw(RenderTarget main, RenderTarget schematic) {
 		RenderPipeline pipeline = pipeline();
-        assert main.getColorTextureView() != null;
-		try (RenderPass pass = Gpu.openPass("litematicapass_schematic_composite", main.getColorTextureView(), null, main.width, main.height)) {
+		try (RenderPass pass = Gpu.colorPass("litematicapass_schematic_composite", main)) {
 			Gpu.setPipeline(pass, pipeline);
-			RenderSystem.bindDefaultUniforms(pass);
-			GpuTextureView opaque = SceneDepth.opaqueView();
-			Gpu.bindTexture(pass, "SchematicColor", schematic.getColorTextureView());
-			Gpu.bindTexture(pass, "SchematicDepth", schematic.getDepthTextureView());
-			Gpu.bindTexture(pass, "MainDepth", main.getDepthTextureView());
-			Gpu.bindTexture(pass, "OpaqueDepth", opaque != null ? opaque : main.getDepthTextureView());
+			RenderTarget opaque = SceneDepth.opaque();
+			Gpu.bindColor(pass, "SchematicColor", schematic);
+			Gpu.bindDepth(pass, "SchematicDepth", schematic);
+			Gpu.bindDepth(pass, "MainDepth", main);
+			Gpu.bindDepth(pass, "OpaqueDepth", opaque != null ? opaque : main);
 			Gpu.drawScreenQuad(pass);
 		}
 	}

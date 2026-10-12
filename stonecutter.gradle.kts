@@ -27,13 +27,17 @@ stonecutter parameters {
             replace("com.mojang.renderpearl.api.pipeline.UniformType", "com.mojang.blaze3d.shaders.UniformType")
             replace("com.mojang.renderpearl.api.textures.FilterMode", "com.mojang.blaze3d.textures.FilterMode")
             replace("com.mojang.renderpearl.api.textures.GpuSampler", "com.mojang.blaze3d.textures.GpuSampler")
-            replace("com.mojang.renderpearl.api.textures.GpuTextureView", "com.mojang.blaze3d.textures.GpuTextureView")
         }
 
         // 1.21.11 renamed ResourceLocation to Identifier and started shipping JSpecify
         string(eval(current.version, "<1.21.11")) {
             replace("Identifier", "ResourceLocation")
             replace("org.jspecify.annotations.Nullable", "org.jetbrains.annotations.Nullable")
+        }
+
+        // GpuTextureView came with 1.21.6; before, Gpu.java uses the textures themselves
+        string(eval(current.version, ">=1.21.6") && eval(current.version, "<26.3")) {
+            replace("com.mojang.renderpearl.api.textures.GpuTextureView", "com.mojang.blaze3d.textures.GpuTextureView")
         }
 
         // Fabric API for 26.1 renamed ClientCommandManager to ClientCommands

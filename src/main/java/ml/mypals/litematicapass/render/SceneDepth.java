@@ -2,7 +2,6 @@ package ml.mypals.litematicapass.render;
 
 import com.mojang.blaze3d.pipeline.RenderTarget;
 import com.mojang.blaze3d.pipeline.TextureTarget;
-import com.mojang.renderpearl.api.textures.GpuTextureView;
 import fi.dy.masa.litematica.config.Configs;
 import org.jspecify.annotations.Nullable;
 
@@ -56,14 +55,14 @@ public final class SceneDepth {
 
 	/** Depth without translucent surfaces, or null if it was not captured this frame. */
 	@Nullable
-	static GpuTextureView opaqueView() {
-		return opaqueReady && opaque != null ? opaque.getDepthTextureView() : null;
+	static RenderTarget opaque() {
+		return opaqueReady ? opaque : null;
 	}
 
 	/** Depth without translucent surfaces and without the hand, or null if it was not captured this frame. */
 	@Nullable
-	static GpuTextureView noHandView() {
-		return noHandReady && noHand != null ? noHand.getDepthTextureView() : null;
+	static RenderTarget noHand() {
+		return noHandReady ? noHand : null;
 	}
 
 	static void endFrame() {

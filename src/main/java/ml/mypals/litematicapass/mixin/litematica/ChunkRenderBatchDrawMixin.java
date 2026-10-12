@@ -1,7 +1,7 @@
 package ml.mypals.litematicapass.mixin.litematica;
 
 import org.spongepowered.asm.mixin.Mixin;
-//? if <26.3 {
+//? if <26.3 && >=1.21.6 {
 /*import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 import com.mojang.blaze3d.pipeline.RenderTarget;
@@ -17,7 +17,7 @@ import org.spongepowered.asm.mixin.injection.At;
  */
 @Mixin(targets = "fi.dy.masa.litematica.render.schematic.ChunkRenderBatchDraw", remap = false)
 public class ChunkRenderBatchDrawMixin {
-	//? if <26.3 {
+	//? if <26.3 && >=1.21.6 {
 	/*@WrapOperation(method = "draw", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/chunk/ChunkSectionLayerGroup;outputTarget()Lcom/mojang/blaze3d/pipeline/RenderTarget;", remap = true))
 	private RenderTarget litematicapass$routeOutput(ChunkSectionLayerGroup group, Operation<RenderTarget> original) {
 		return SchematicTarget.targetFor(original.call(group));

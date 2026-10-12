@@ -14,7 +14,9 @@ import net.minecraft.client.renderer.SubmitNodeStorage;
 import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.util.profiling.ProfilerFiller;
 *///?}
+//? if >=1.21.6 {
 import net.minecraft.client.renderer.chunk.ChunkSectionLayerGroup;
+//?}
 //? if <26.3 && >=1.21.11 {
 /*import com.mojang.renderpearl.api.textures.GpuSampler;
 import org.jspecify.annotations.Nullable;
@@ -58,7 +60,7 @@ public class LitematicaRendererMixin {
 			SchematicTarget.end();
 		}
 	}
-	*///?} else {
+	*///?} else if >=1.21.6 {
 	/*// Litematica picks the output target itself here (see ChunkRenderBatchDrawMixin); 0.24 and older take no sampler.
 	@WrapMethod(method = "piecewiseDrawBlockLayerGroup")
 	private void litematicapass$routeTerrain(ChunkSectionLayerGroup group, Operation<Void> original) {
@@ -72,6 +74,20 @@ public class LitematicaRendererMixin {
 		} finally {
 			SchematicTarget.end();
 		}
+	}
+	*///?} else {
+	/*// Litematica 0.22 and older (Minecraft 1.21.5 and older) draw each terrain layer into the main target, which
+	// MinecraftMixin hands out as the schematic target while routing.
+	@Inject(method = { "piecewiseRenderSolid", "piecewiseRenderCutoutMipped", "piecewiseRenderCutout", "piecewiseRenderTranslucent",
+		"piecewiseRenderTripwire" }, at = @At("HEAD"))
+	private void litematicapass$beginTerrain(CallbackInfo ci) {
+		SchematicTarget.begin();
+	}
+
+	@Inject(method = { "piecewiseRenderSolid", "piecewiseRenderCutoutMipped", "piecewiseRenderCutout", "piecewiseRenderTranslucent",
+		"piecewiseRenderTripwire" }, at = @At("RETURN"))
+	private void litematicapass$endTerrain(CallbackInfo ci) {
+		SchematicTarget.end();
 	}
 	*///?}
 
