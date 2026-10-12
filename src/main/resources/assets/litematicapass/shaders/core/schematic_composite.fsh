@@ -1,0 +1,37 @@
+#version 330
+#extension GL_ARB_separate_shader_objects : require
+
+uniform sampler2D SchematicColor;
+uniform sampler2D SchematicDepth;
+uniform sampler2D MainDepth;
+uniform sampler2D OpaqueDepth;
+
+layout(location = 0) in vec2 texCoord;
+
+layout(location = 0) out vec4 fragColor;
+
+// 当schematic位于场景的半透明表面后方时，其颜色会乘以该系数。
+const float BEHIND_TRANSLUCENT = 0.5;
+
+const float TRANSLUCENT_EXISTS = 1.0005;
+const float BEHIND = 0.999;
+
+void main() {
+    ivec2 pixelCoords = ivec2(gl_FragCoord.xy);
+    vec4 color = texelFetch(SchematicColor, pixelCoords, 0);
+    if (color.a <= 0.0) {
+        discard;
+    }
+
+    float schematicDepth = texelFetch(SchematicDepth, pixelCoords, 0).r;
+    float mainDepth = texelFetch(MainDepth, pixelCoords, 0).r;
+    float opaqueDepth = texelFetch(OpaqueDepth, pixelCoords, 0).r;
+
+    // 只有在不透明场景前方绘制了半透明表面的地方，主深度才会比绘制半透明表面之前的深度更近。
+    // 如果该表面的距离比 schematic 更近，则说明 schematic 位于其后方。
+    bool translucentInFront = mainDepth > opaqueDepth * TRANSLUCENT_EXISTS;
+    bool behindTranslucent = translucentInFront && schematicDepth < mainDepth * BEHIND;
+
+    // 颜色是预乘的，因此对其缩放会同时改变亮度和不透明度。
+    fragColor = behindTranslucent ? color * BEHIND_TRANSLUCENT : color;
+}

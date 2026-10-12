@@ -1,0 +1,22 @@
+{
+  "required": true,
+  "package": "ml.mypals.litematicapass.mixin",
+  "plugin": "ml.mypals.litematicapass.plugin.LitematicaPassMixinPlugin",
+  "compatibilityLevel": "JAVA_25",
+  "client": [
+    "LevelRendererMixin",
+    "StrictValidationMixin",
+    "iris.IrisRenderingPipelineMixin",
+    "litematica.ChunkRendererSchematicVboMixin",
+    "litematica.LegacyTerrainFixUniformMixin",
+    "litematica.LitematicaRendererMixin",
+    "litematica.RenderHandlerMixin",
+    "litematica.RenderUtilsMixin"
+  ],
+  "injectors": {
+    "defaultRequire": 1
+  },
+  "overwrites": {
+    "requireAnnotations": true
+	}
+}
