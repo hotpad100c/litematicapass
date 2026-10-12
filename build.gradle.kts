@@ -106,6 +106,8 @@ loom {
     runConfigs.all {
         ideConfigGenerated(true)
         vmArgs("-Dmixin.debug.export=true") // Exports transformed classes for debugging
+        // Sodium for 1.20.1 refuses the LWJGL snapshot of the development runtime (it wants exactly 3.3.1).
+        vmArgs("-Dsodium.checks.issue2561=false")
         runDir = "../../run" // Shares the run directory between versions
     }
 }
