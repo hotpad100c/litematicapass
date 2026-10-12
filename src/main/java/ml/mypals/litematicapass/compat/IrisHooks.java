@@ -54,8 +54,14 @@ final class IrisHooks {
 		boolean routing = bypass;
 		bypass = false;
 		try {
-			return Iris.getPipelineManager().getPipelineNullable() instanceof LegacyIrisPipelineAccessor pipeline
-				? pipeline.litematicapass$renderTargets().getDepthTexture().getTextureId() : 0;
+			if (!(Iris.getPipelineManager().getPipelineNullable() instanceof LegacyIrisPipelineAccessor pipeline)) {
+				return 0;
+			}
+			//? if >=1.18 {
+			return pipeline.litematicapass$renderTargets().getDepthTexture().getTextureId();
+			//?} else {
+			/^return pipeline.litematicapass$renderTargets().getDepthTexture();
+			^///?}
 		} finally {
 			bypass = routing;
 		}

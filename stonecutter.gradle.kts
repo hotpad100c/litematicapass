@@ -7,7 +7,7 @@ stonecutter active "1.21.1"
 
 // See https://stonecutter.kikugie.dev/wiki/config/params
 // Versions whose newest Iris is older than 1.7, which still lived in net.coderbot.iris.
-val legacyIris = setOf("1.20.2", "1.20", "1.19.3", "1.18.2", "1.18.1")
+val legacyIris = setOf("1.20.2", "1.20", "1.19.3", "1.18.2", "1.18.1", "1.17.1")
 
 stonecutter parameters {
     replacements {
