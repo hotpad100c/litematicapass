@@ -18,14 +18,6 @@ public final class IrisCompat {
 			IrisHooks.setBypass(bypass);
 		}
 	}
-	public static boolean skipExtension() {
-		return LOADED && IrisHooks.skipExtension();
-	}
-	public static void setSkipExtension(boolean skip) {
-		if (LOADED) {
-			IrisHooks.setSkipExtension(skip);
-		}
-	}
 
 	/** Iris only widens vertex formats while the level is being rendered. */
 	public static boolean isRenderingLevel() {

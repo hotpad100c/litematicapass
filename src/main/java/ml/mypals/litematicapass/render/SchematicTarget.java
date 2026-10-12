@@ -15,7 +15,6 @@ public final class SchematicTarget {
 	private static int bypassDepth;
 	private static boolean bypassApplied;
 	private static boolean bypassSaved;
-	private static boolean skipExtensionSaved;
 
 	private static boolean preparedThisFrame;
 	private static boolean preparing;
@@ -41,10 +40,6 @@ public final class SchematicTarget {
 			if (bypassApplied) {
 				bypassSaved = IrisCompat.bypass();
 				IrisCompat.setBypass(true);
-				// Litematica's chunk meshes are built in the plain BLOCK format (see ChunkRendererSchematicVboMixin);
-				// make sure Iris does not widen the vertex format the pipeline is bound with either.
-				skipExtensionSaved = IrisCompat.skipExtension();
-				IrisCompat.setSkipExtension(true);
 				// Before 1.21.5 draws go to whatever framebuffer is bound; bind ours for the routed section.
 				restoreOutput = Gpu.bindForDrawing(prepareForDraw());
 			}
@@ -56,7 +51,6 @@ public final class SchematicTarget {
 			restoreOutput.run();
 			restoreOutput = NOTHING;
 			IrisCompat.setBypass(bypassSaved);
-			IrisCompat.setSkipExtension(skipExtensionSaved);
 			bypassApplied = false;
 		}
 	}

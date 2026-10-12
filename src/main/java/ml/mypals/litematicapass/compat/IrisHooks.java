@@ -20,15 +20,6 @@ final class IrisHooks {
 	static void setBypass(boolean bypass) {
 		IrisHooks.bypass = bypass;
 	}
-	// Iris for Minecraft 26.2 and older already hands out its extended terrain format as the vanilla terrain format,
-	// so the schematic's buffers and the vanilla pipelines agree on it; skipping the extension there leaves the buffers
-	// in that format without its extra data ("Missing elements in vertex: mc_midTexCoord, at_tangent"). Leave it alone.
-	static boolean skipExtension() {
-		return false;
-	}
-	static void setSkipExtension(boolean skip) {
-	}
-
 	static boolean isRenderingLevel() {
 		return ImmediateState.isRenderingLevel;
 	}

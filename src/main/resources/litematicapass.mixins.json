@@ -10,7 +10,6 @@
     "MinecraftMixin",
     "iris.IrisRenderingPipelineMixin",
     "iris.IrisShaderOverrideMixin",
-    "litematica.ChunkRendererSchematicVboMixin",
     "litematica.LitematicaRendererMixin",
     "litematica.RenderHandlerMixin"
   ],
