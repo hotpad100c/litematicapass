@@ -18,7 +18,6 @@ import java.util.Optional;
 import java.util.OptionalDouble;
 //?} else {
 /*import com.mojang.blaze3d.platform.GlStateManager;
-import com.mojang.blaze3d.vertex.BufferUploader;
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL13;
 import org.lwjgl.opengl.GL20;
@@ -192,6 +191,29 @@ final class Gpu {
 		*///?} else {
 		return () -> {};
 		//?}
+	}
+
+	/**
+	 * Makes {@code target} the framebuffer that following draws go to; run the returned action to bind back what was
+	 * bound. Only before 1.21.5: there draws go to whatever framebuffer is bound (on 1.21.1 render types do not even
+	 * bind the main target), while later versions name the target of every pass.
+	 */
+	static Runnable bindForDrawing(RenderTarget target) {
+		//? if >=1.21.5 {
+		return () -> {};
+		//?} else {
+		/*int drawFramebuffer = GL11.glGetInteger(GL30.GL_DRAW_FRAMEBUFFER_BINDING);
+		int readFramebuffer = GL11.glGetInteger(GL30.GL_READ_FRAMEBUFFER_BINDING);
+		int[] viewport = new int[4];
+		GL11.glGetIntegerv(GL11.GL_VIEWPORT, viewport);
+		GlStateManager._glBindFramebuffer(GL30.GL_FRAMEBUFFER, target.frameBufferId);
+		GlStateManager._viewport(0, 0, target.width, target.height);
+		return () -> {
+			GlStateManager._glBindFramebuffer(GL30.GL_DRAW_FRAMEBUFFER, drawFramebuffer);
+			GlStateManager._glBindFramebuffer(GL30.GL_READ_FRAMEBUFFER, readFramebuffer);
+			GlStateManager._viewport(viewport[0], viewport[1], viewport[2], viewport[3]);
+		};
+		*///?}
 	}
 
 	/** A texture a full-screen pass samples: the colour or the depth of a target, read with {@code texelFetch}. */
@@ -382,6 +404,7 @@ final class Gpu {
 		private final String[] samplers;
 		private int program;
 		private int[] samplerLocations;
+		private boolean failed;
 
 		private Pipeline(String location, String fragmentShader, boolean depthOnly, boolean premultiplied, Map<String, Integer> defines,
 			String[] samplers) {
@@ -452,8 +475,18 @@ final class Gpu {
 
 	// Draws the pipeline over the whole of output, keeping its contents, and restores the GL state it touches.
 	static void draw(Pipeline pipeline, RenderTarget output, Sampler... samplers) {
+		if (pipeline.failed) {
+			return;
+		}
 		if (pipeline.program == 0) {
-			pipeline.compile();
+			try {
+				pipeline.compile();
+			} catch (RuntimeException e) {
+				// Leave the frame as it is instead of crashing the game; report it once.
+				pipeline.failed = true;
+				LitematicaPass.LOGGER.error("Could not set up {}; it will not be drawn", pipeline.fragmentShader, e);
+				return;
+			}
 		}
 		if (emptyVertexArray == 0) {
 			emptyVertexArray = GlStateManager._glGenVertexArrays();
@@ -465,6 +498,15 @@ final class Gpu {
 		boolean depthTest = GL11.glIsEnabled(GL11.GL_DEPTH_TEST);
 		boolean blend = GL11.glIsEnabled(GL11.GL_BLEND);
 		int activeTexture = GlStateManager._getActiveTexture();
+		// Minecraft caches the bound program, vertex array and textures; restore exactly what was bound, or its next
+		// draw runs without its shader (depth only, no colour).
+		int program = GL11.glGetInteger(GL20.GL_CURRENT_PROGRAM);
+		int vertexArray = GL11.glGetInteger(GL30.GL_VERTEX_ARRAY_BINDING);
+		int[] textures = new int[samplers.length];
+		for (int i = 0; i < samplers.length; i++) {
+			GlStateManager._activeTexture(GL13.GL_TEXTURE0 + i);
+			textures[i] = GL11.glGetInteger(GL11.GL_TEXTURE_BINDING_2D);
+		}
 
 		GlStateManager._glBindFramebuffer(GL30.GL_FRAMEBUFFER, output.frameBufferId);
 		GlStateManager._viewport(0, 0, output.width, output.height);
@@ -494,12 +536,11 @@ final class Gpu {
 		GlStateManager._glBindVertexArray(emptyVertexArray);
 		GL11.glDrawArrays(GL11.GL_TRIANGLES, 0, 3);
 
-		GlStateManager._glBindVertexArray(0);
-		BufferUploader.invalidate();
-		GlStateManager._glUseProgram(0);
+		GlStateManager._glBindVertexArray(vertexArray);
+		GlStateManager._glUseProgram(program);
 		for (int i = samplers.length - 1; i >= 0; i--) {
 			GlStateManager._activeTexture(GL13.GL_TEXTURE0 + i);
-			GlStateManager._bindTexture(0);
+			GlStateManager._bindTexture(textures[i]);
 		}
 		GlStateManager._activeTexture(activeTexture);
 		GlStateManager._colorMask(true, true, true, true);

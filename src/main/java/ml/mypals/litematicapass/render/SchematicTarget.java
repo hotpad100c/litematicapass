@@ -26,6 +26,8 @@ public final class SchematicTarget {
 		return compositedFrames;
 	}
 	private static boolean usedThisFrame;
+	private static final Runnable NOTHING = () -> {};
+	private static Runnable restoreOutput = NOTHING;
 
 	private SchematicTarget() {}
 
@@ -43,12 +45,16 @@ public final class SchematicTarget {
 				// make sure Iris does not widen the vertex format the pipeline is bound with either.
 				skipExtensionSaved = IrisCompat.skipExtension();
 				IrisCompat.setSkipExtension(true);
+				// Before 1.21.5 draws go to whatever framebuffer is bound; bind ours for the routed section.
+				restoreOutput = Gpu.bindForDrawing(prepareForDraw());
 			}
 		}
 	}
 
 	public static void end() {
 		if (bypassDepth > 0 && --bypassDepth == 0 && bypassApplied) {
+			restoreOutput.run();
+			restoreOutput = NOTHING;
 			IrisCompat.setBypass(bypassSaved);
 			IrisCompat.setSkipExtension(skipExtensionSaved);
 			bypassApplied = false;

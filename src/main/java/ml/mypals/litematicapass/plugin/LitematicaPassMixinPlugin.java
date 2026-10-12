@@ -38,6 +38,14 @@ public final class LitematicaPassMixinPlugin implements IMixinConfigPlugin {
 			/*return true;
 			*///?}
 		}
+		if (name.equals("GlStateManagerMixin")) {
+			// Only the OpenGL-state versions blend through GlStateManager.
+			//? if >=1.21.5 {
+			return false;
+			//?} else {
+			/*return true;
+			*///?}
+		}
 		if (name.equals("litematica.RenderUtilsMixin")) {
 			// Before 1.21.6 MinecraftMixin already routes the main target that malilib's accessor returns.
 			//? if >=1.21.6 {

@@ -4,6 +4,7 @@
   "plugin": "ml.mypals.litematicapass.plugin.LitematicaPassMixinPlugin",
   "compatibilityLevel": "${java}",
   "client": [
+    "GlStateManagerMixin",
     "LevelRendererMixin",
     "MinecraftAccessor",
     "MinecraftMixin",
