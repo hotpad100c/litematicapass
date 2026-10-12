@@ -18,6 +18,13 @@ public final class SchematicTarget {
 	private static boolean skipExtensionSaved;
 
 	private static boolean preparedThisFrame;
+	private static boolean preparing;
+	private static long compositedFrames;
+
+	/** How many frames merged the independent target onto the main one (for the debug command and checks). */
+	public static long compositedFrames() {
+		return compositedFrames;
+	}
 	private static boolean usedThisFrame;
 
 	private SchematicTarget() {}
@@ -53,16 +60,23 @@ public final class SchematicTarget {
 	}
 
 	public static RenderTarget targetFor(RenderTarget main) {
-		return isRouting() ? prepareForDraw() : main;
+		// Preparing the target runs Minecraft code that may ask for the main target itself (before 1.21.6 that is
+		// routed here, see MinecraftMixin); it must get the real one.
+		return isRouting() && !preparing ? prepareForDraw() : main;
 	}
 
 	public static RenderTarget prepareForDraw() {
-		ensureTarget();
-		if (!preparedThisFrame) {
-			RenderTarget main = Gpu.mainTarget();
-			Gpu.clear(target);
-			DepthSeed.seed(main, target);
-			preparedThisFrame = true;
+		preparing = true;
+		try {
+			ensureTarget();
+			if (!preparedThisFrame) {
+				RenderTarget main = Gpu.mainTarget();
+				Gpu.clear(target);
+				DepthSeed.seed(main, target);
+				preparedThisFrame = true;
+			}
+		} finally {
+			preparing = false;
 		}
 		usedThisFrame = true;
 		return target;
@@ -90,6 +104,7 @@ public final class SchematicTarget {
 				IrisCompat.setBypass(true);
 				try {
 					SchematicComposite.draw(main, target);
+					compositedFrames++;
 				} finally {
 					IrisCompat.setBypass(saved);
 				}
