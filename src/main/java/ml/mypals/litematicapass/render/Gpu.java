@@ -316,14 +316,17 @@ final class Gpu {
 	}
 
 	/**
-	 * Makes a pipeline that only writes depth, with the default depth test. Before 26.2 every pass needs a colour
-	 * attachment and a pipeline writes all colour channels unless told otherwise, so mask them off (see
-	 * {@link #depthPass}).
+	 * Makes a pipeline that only writes depth, with the default depth test. Before 26.3 a pipeline without colour
+	 * targets still gets a default one (and a pass needs a colour attachment before 26.2), so the pass attaches the
+	 * target's colour and the pipeline masks it off (see {@link #depthPass}).
 	 */
 	private static void depthOnly(RenderPipeline.Builder builder) {
-		//? if >=26.2 {
+		//? if >=26.3 {
 		builder.withDepthStencilState(DepthStencilState.DEFAULT);
-		//?} else if >=26.1 {
+		//?} else if >=26.2 {
+		/*builder.withColorTargetState(new ColorTargetState(Optional.empty(), GpuFormat.RGBA8_UNORM, ColorTargetState.WRITE_NONE))
+			.withDepthStencilState(DepthStencilState.DEFAULT);
+		*///?} else if >=26.1 {
 		/*builder.withColorTargetState(new ColorTargetState(Optional.empty(), ColorTargetState.WRITE_NONE))
 			.withDepthStencilState(DepthStencilState.DEFAULT);
 		*///?} else {
@@ -337,11 +340,11 @@ final class Gpu {
 	}
 
 	/**
-	 * Opens a pass drawing into the depth of {@code target}, keeping its contents. Before 26.2 every pass needs a colour
-	 * attachment, so the target's colour is attached too (see {@link #depthOnly}).
+	 * Opens a pass drawing into the depth of {@code target}, keeping its contents. Before 26.3 the target's colour is
+	 * attached too, unwritten (see {@link #depthOnly}).
 	 */
 	private static RenderPass depthPass(String label, RenderTarget target) {
-		//? if >=26.2 {
+		//? if >=26.3 {
 		return openPass(label, null, depth(target), target);
 		//?} else {
 		/*return openPass(label, color(target), depth(target), target);
