@@ -28,7 +28,23 @@ repositories {
         filter { groups.forEach(::includeGroup) }
     }
     strictMaven("https://api.modrinth.com/maven", "Modrinth", "maven.modrinth")
-    strictMaven("https://maven.fallenbreath.me/releases", "Fallen_Breath", "me.fallenbreath")
+}
+
+// The libraries nested in the Iris and Sodium jars (their Fabric API modules aside), for the development runtime
+// (see below).
+val nestingJars = configurations.detachedConfiguration(
+    dependencies.create("maven.modrinth:${prop("deps.iris")}"),
+    dependencies.create("maven.modrinth:${prop("deps.sodium")}")
+).apply { isTransitive = false }
+val nestedLibraries = tasks.register<Sync>("nestedLibraries") {
+    from({ nestingJars.files.map { zipTree(it) } }) {
+        include("META-INF/jars/*.jar")
+        exclude("META-INF/jars/fabric-*")
+        eachFile { path = name }
+    }
+    includeEmptyDirs = false
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+    into(layout.buildDirectory.dir("nestedLibraries"))
 }
 
 dependencies {
@@ -42,18 +58,11 @@ dependencies {
     modImplementation("maven.modrinth:${prop("deps.iris")}")
     modImplementation("maven.modrinth:${prop("deps.sodium")}")
 
-    // Iris nests these libraries in its jar, but the development runtime does not load the nested jars of
-    // dependencies; without them Iris fails as soon as it reads a shader pack.
-    for (library in listOf(
-        "org.anarres:jcpp:1.4.14",
-        "org.antlr:antlr4-runtime:4.13.1",
-        "io.github.douira:glsl-transformer:${prop("deps.glsl_transformer")}"
-    )) {
-        localRuntime(library) { isTransitive = false }
-    }
+    // Iris and Sodium nest libraries (jcpp, ANTLR, glsl-transformer, JOML before 1.19.3; versions change from build to
+    // build) in their jars, but the development runtime does not load the nested jars of dependencies; without them
+    // Iris fails as soon as it reads a shader pack. Put the copies from those jars themselves on the runtime classpath.
+    localRuntime(fileTree(nestedLibraries.map { it.destinationDir }) { include("*.jar") }.builtBy(nestedLibraries))
 
-    // Newer Litematica / MaLiLib builds nest this mod too (same reason as above).
-    findProperty("deps.conditional_mixin")?.let { modLocalRuntime("me.fallenbreath:conditional-mixin-fabric:$it") }
     // The mods as players install them (intermediary names), for `runProductionSmoke`.
     for (mod in listOf(
         "net.fabricmc.fabric-api:fabric-api:${prop("deps.fabric_api")}",

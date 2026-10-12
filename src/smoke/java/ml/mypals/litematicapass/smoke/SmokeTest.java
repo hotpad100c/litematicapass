@@ -131,7 +131,12 @@ public final class SmokeTest implements ClientModInitializer {
 	 */
 	private void showcase(Minecraft mc) {
 		if (this.ticksInWorld == 20) {
+			//? if >=1.19.4 {
 			mc.player.connection.sendCommand("tp @s ~ 200 ~ 0 10");
+			//?} else {
+			/*// The command API changes in every version before; the singleplayer owner may simply move there.
+			mc.player.absMoveTo(mc.player.getX(), 200, mc.player.getZ(), 0, 10);
+			*///?}
 		}
 		if (this.placedAt < 0 && this.ticksInWorld > 20 && mc.player.getY() > 190) {
 			// Hover in place (creative flight) so the view stays on the schematic.
