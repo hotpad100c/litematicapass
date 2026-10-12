@@ -3,6 +3,7 @@ package ml.mypals.litematicapass.mixin.litematica;
 import com.llamalad7.mixinextras.injector.wrapmethod.WrapMethod;
 import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 import fi.dy.masa.litematica.render.LitematicaRenderer;
+import ml.mypals.litematicapass.compat.IrisCompat;
 import ml.mypals.litematicapass.render.SchematicEntities;
 import ml.mypals.litematicapass.render.SchematicTarget;
 //? if >=1.21 {
@@ -77,4 +78,16 @@ public class LitematicaRendererMixin {
 	private void litematicapass$endOverlay(CallbackInfo ci) {
 		SchematicTarget.end();
 	}
+
+	//? if <1.18.2 {
+	/*// Iris 1.2 and older (Minecraft 1.18.1 and older) draw the translucent layer again in their shadow pass, through the
+	// vanilla method Litematica draws its translucent blocks and overlay from. Litematica prepares the schematic once a
+	// frame, before that shadow pass, and the cleanup after its overlay would leave the main pass with nothing to draw.
+	@Inject(method = "cleanup", at = @At("HEAD"), cancellable = true)
+	private void litematicapass$keepForMainPass(CallbackInfo ci) {
+		if (IrisCompat.isRenderingShadowPass()) {
+			ci.cancel();
+		}
+	}
+	*///?}
 }

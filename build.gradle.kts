@@ -40,6 +40,8 @@ val nestedLibraries = tasks.register<Sync>("nestedLibraries") {
     from({ nestingJars.files.map { zipTree(it) } }) {
         include("META-INF/jars/*.jar")
         exclude("META-INF/jars/fabric-*")
+        // Minecraft brings its own slf4j (Iris 1.2 nests an older one, which hides every mod from Fabric Loader).
+        exclude("META-INF/jars/slf4j-*")
         eachFile { path = name }
     }
     includeEmptyDirs = false

@@ -29,4 +29,11 @@ public final class IrisCompat {
 			IrisHooks.setRenderingLevel(renderingLevel);
 		}
 	}
+
+	/**
+	 * The texture the shader pack's scene depth is in when it is not the main depth (Iris 1.2 and older), else 0.
+	 */
+	public static int sceneDepthTexture() {
+		return LOADED ? IrisHooks.sceneDepthTexture() : 0;
+	}
 }

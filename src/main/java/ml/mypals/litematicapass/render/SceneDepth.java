@@ -3,6 +3,7 @@ package ml.mypals.litematicapass.render;
 import com.mojang.blaze3d.pipeline.RenderTarget;
 import com.mojang.blaze3d.pipeline.TextureTarget;
 import fi.dy.masa.litematica.config.Configs;
+import ml.mypals.litematicapass.compat.IrisCompat;
 import org.jetbrains.annotations.Nullable;
 
 /**
@@ -40,7 +41,19 @@ public final class SceneDepth {
 		}
 	}
 
+	/**
+	 * Brings the shader pack's scene depth into the main depth where they are not the same (Iris 1.2 and older keep it
+	 * in their own texture); call before reading the main depth.
+	 */
+	static void syncMainDepth() {
+		int texture = IrisCompat.sceneDepthTexture();
+		if (texture != 0) {
+			Gpu.copyDepthTexture(texture, Gpu.mainTarget());
+		}
+	}
+
 	private static TextureTarget copy(@Nullable TextureTarget target, String label) {
+		syncMainDepth();
 		RenderTarget main = Gpu.mainTarget();
 		int width = Math.max(1, main.width);
 		int height = Math.max(1, main.height);

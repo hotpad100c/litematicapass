@@ -10,6 +10,7 @@
     "MinecraftMixin",
     "iris.IrisRenderingPipelineMixin",
     "iris.IrisShaderOverrideMixin",
+    "iris.LegacyIrisPipelineAccessor",
     "litematica.LitematicaRendererMixin",
     "litematica.RenderHandlerMixin",
     "litematica.WorldRendererSchematicMixin"

@@ -72,6 +72,7 @@ public final class SchematicTarget {
 			if (!preparedThisFrame) {
 				RenderTarget main = Gpu.mainTarget();
 				Gpu.clear(target);
+				SceneDepth.syncMainDepth();
 				DepthSeed.seed(main, target);
 				preparedThisFrame = true;
 			}
@@ -103,6 +104,7 @@ public final class SchematicTarget {
 				boolean saved = IrisCompat.bypass();
 				IrisCompat.setBypass(true);
 				try {
+					SceneDepth.syncMainDepth();
 					SchematicComposite.draw(main, target);
 					compositedFrames++;
 				} finally {

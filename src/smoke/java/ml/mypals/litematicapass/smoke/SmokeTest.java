@@ -115,8 +115,10 @@ public final class SmokeTest implements ClientModInitializer {
 			log("opening the create-world screen");
 			//? if >=1.19 {
 			CreateWorldScreen.openFresh(mc, null);
-			//?} else {
+			//?} else if >=1.18.2 {
 			/*mc.setScreen(CreateWorldScreen.createFresh(null));
+			*///?} else {
+			/*mc.setScreen(CreateWorldScreen.create(null));
 			*///?}
 		}
 	}

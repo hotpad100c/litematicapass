@@ -70,6 +70,24 @@ final class Gpu {
 		target.clear(Minecraft.ON_OSX);
 	}
 
+	private static int depthTextureReadFramebuffer;
+
+	/** Copies the depth texture {@code texture}, of {@code target}'s size, into the depth of {@code target}. */
+	static void copyDepthTexture(int texture, RenderTarget target) {
+		int drawFramebuffer = GL11.glGetInteger(GL30.GL_DRAW_FRAMEBUFFER_BINDING);
+		int readFramebuffer = GL11.glGetInteger(GL30.GL_READ_FRAMEBUFFER_BINDING);
+		if (depthTextureReadFramebuffer == 0) {
+			depthTextureReadFramebuffer = GL30.glGenFramebuffers();
+		}
+		GlStateManager._glBindFramebuffer(GL30.GL_READ_FRAMEBUFFER, depthTextureReadFramebuffer);
+		GL30.glFramebufferTexture2D(GL30.GL_READ_FRAMEBUFFER, GL30.GL_DEPTH_ATTACHMENT, GL11.GL_TEXTURE_2D, texture, 0);
+		GlStateManager._glBindFramebuffer(GL30.GL_DRAW_FRAMEBUFFER, target.frameBufferId);
+		GL30.glBlitFramebuffer(0, 0, target.width, target.height, 0, 0, target.width, target.height, GL11.GL_DEPTH_BUFFER_BIT,
+			GL11.GL_NEAREST);
+		GlStateManager._glBindFramebuffer(GL30.GL_DRAW_FRAMEBUFFER, drawFramebuffer);
+		GlStateManager._glBindFramebuffer(GL30.GL_READ_FRAMEBUFFER, readFramebuffer);
+	}
+
 	/** Copies the depth of {@code source} into {@code target}. */
 	static void copyDepth(RenderTarget target, RenderTarget source) {
 		// copyDepthFrom leaves the default framebuffer bound; this runs inside the shader pack's passes.
