@@ -18,13 +18,21 @@ final class SchematicComposite {
 	static void draw(RenderTarget main, RenderTarget schematic) {
 		if (pipeline == null) {
 			pipeline = Gpu.colorPipeline("pipeline/schematic_composite", "core/schematic_composite", true, Map.of(),
-				"SchematicColor", "SchematicDepth", "MainDepth", "OpaqueDepth");
+				"SchematicColor", "SchematicDepth", "MainDepth", "OpaqueDepth", "NoHandDepth");
 		}
 		RenderTarget opaque = SceneDepth.opaque();
+		RenderTarget noHand = SceneDepth.noHand();
+		if (opaque == null) {
+			opaque = main;
+		}
+		if (noHand == null) {
+			noHand = opaque;
+		}
 		Gpu.draw(pipeline, main,
 			Gpu.color("SchematicColor", schematic),
 			Gpu.depth("SchematicDepth", schematic),
 			Gpu.depth("MainDepth", main),
-			Gpu.depth("OpaqueDepth", opaque != null ? opaque : main));
+			Gpu.depth("OpaqueDepth", opaque),
+			Gpu.depth("NoHandDepth", noHand));
 	}
 }

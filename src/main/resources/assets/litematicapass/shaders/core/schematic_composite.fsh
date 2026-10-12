@@ -5,6 +5,7 @@ uniform sampler2D SchematicColor;
 uniform sampler2D SchematicDepth;
 uniform sampler2D MainDepth;
 uniform sampler2D OpaqueDepth;
+uniform sampler2D NoHandDepth;
 
 layout(location = 0) out vec4 fragColor;
 
@@ -26,6 +27,12 @@ void main() {
     ivec2 pixelCoords = ivec2(gl_FragCoord.xy);
     vec4 color = texelFetch(SchematicColor, pixelCoords, 0);
     if (color.a <= 0.0) {
+        discard;
+    }
+
+    // 第一人称手部所在之处，绘制手部前后的深度不同；手部必须始终在最上方。
+    // 深度初始化（depth_seed）也会处理这一点，但它可能早于手部的捕获（Litematica 在手部之前绘制固体地形时）。
+    if (texelFetch(OpaqueDepth, pixelCoords, 0).r != texelFetch(NoHandDepth, pixelCoords, 0).r) {
         discard;
     }
 
