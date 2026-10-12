@@ -17,8 +17,9 @@ public final class LitematicaPassMixinPlugin implements IMixinConfigPlugin {
 		if (name.startsWith("iris.")) {
 			return FabricLoader.getInstance().isModLoaded("iris");
 		}
-		if (name.equals("litematica.LegacyTerrainFixUniformMixin") || name.equals("litematica.ChunkRenderBatchDrawMixin")) {
-			// Mixin rejects the whole config over a missing target class, and older Litematica builds lack these.
+		if (name.equals("litematica.LegacyTerrainFixUniformMixin") || name.equals("litematica.ChunkRenderBatchDrawMixin")
+			|| name.equals("StrictValidationMixin")) {
+			// Mixin rejects the whole config over a missing target class, and older Litematica / Minecraft builds lack these.
 			if (LitematicaPassMixinPlugin.class.getClassLoader().getResource(targetClassName.replace('.', '/') + ".class") == null) {
 				return false;
 			}
@@ -29,6 +30,14 @@ public final class LitematicaPassMixinPlugin implements IMixinConfigPlugin {
 			return false;
 			//?} else {
 			/*return true;
+			*///?}
+		}
+		if (name.equals("litematica.RenderUtilsMixin")) {
+			// Before 1.21.6 MinecraftMixin already routes the main target that malilib's accessor returns.
+			//? if >=1.21.6 {
+			return true;
+			//?} else {
+			/*return false;
 			*///?}
 		}
 		if (name.equals("litematica.ChunkRenderBatchDrawMixin")) {

@@ -1,11 +1,8 @@
 package ml.mypals.litematicapass.render;
 
 import com.mojang.blaze3d.pipeline.RenderTarget;
-import com.mojang.renderpearl.api.commands.RenderPass;
-import com.mojang.renderpearl.api.pipeline.RenderPipeline;
-import net.minecraft.client.renderer.RenderPipelines;
 
-import java.util.Optional;
+import java.util.Map;
 
 /**
  * 将我们的 schematic 目标合并到主颜色目标上。
@@ -14,30 +11,20 @@ import java.util.Optional;
  * 将 最终的主深度 与 绘制半透明表面之前的深度 进行比较可以快速确定 半透明部分的深度
  */
 final class SchematicComposite {
-	private static RenderPipeline pipeline;
+	private static Gpu.Pipeline pipeline;
 
 	private SchematicComposite() {}
 
-	private static RenderPipeline pipeline() {
-		if (pipeline == null) {
-			pipeline = RenderPipelines.register(Gpu.colorOutput(Gpu.screenQuad("pipeline/schematic_composite", "core/schematic_composite",
-					"SchematicColor", "SchematicDepth", "MainDepth", "OpaqueDepth"),
-				Optional.of(Gpu.PREMULTIPLIED_ALPHA))
-				.build());
-		}
-		return pipeline;
-	}
-
 	static void draw(RenderTarget main, RenderTarget schematic) {
-		RenderPipeline pipeline = pipeline();
-		try (RenderPass pass = Gpu.colorPass("litematicapass_schematic_composite", main)) {
-			Gpu.setPipeline(pass, pipeline);
-			RenderTarget opaque = SceneDepth.opaque();
-			Gpu.bindColor(pass, "SchematicColor", schematic);
-			Gpu.bindDepth(pass, "SchematicDepth", schematic);
-			Gpu.bindDepth(pass, "MainDepth", main);
-			Gpu.bindDepth(pass, "OpaqueDepth", opaque != null ? opaque : main);
-			Gpu.drawScreenQuad(pass);
+		if (pipeline == null) {
+			pipeline = Gpu.colorPipeline("pipeline/schematic_composite", "core/schematic_composite", true, Map.of(),
+				"SchematicColor", "SchematicDepth", "MainDepth", "OpaqueDepth");
 		}
+		RenderTarget opaque = SceneDepth.opaque();
+		Gpu.draw(pipeline, main,
+			Gpu.color("SchematicColor", schematic),
+			Gpu.depth("SchematicDepth", schematic),
+			Gpu.depth("MainDepth", main),
+			Gpu.depth("OpaqueDepth", opaque != null ? opaque : main));
 	}
 }

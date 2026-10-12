@@ -1,9 +1,6 @@
 package ml.mypals.litematicapass.render;
 
 import com.mojang.blaze3d.pipeline.RenderTarget;
-import com.mojang.renderpearl.api.commands.RenderPass;
-import com.mojang.renderpearl.api.pipeline.RenderPipeline;
-import net.minecraft.client.renderer.RenderPipelines;
 
 /**
  * 初始化 schematic 目标的深度，该深度决定了什么会遮挡 schematic。
@@ -11,18 +8,14 @@ import net.minecraft.client.renderer.RenderPipelines;
  * - 在绘制第一人称手部的位置，它被初始化为最近距离，以确保手部始终显示在最上方。
  */
 final class DepthSeed {
+	private static Gpu.Pipeline pipeline;
 
-	private static RenderPipeline pipeline;
-
-	private static RenderPipeline pipeline() {
-		if (pipeline == null) {
-			pipeline = RenderPipelines.register(Gpu.depthOnly(Gpu.screenQuad("pipeline/depth_seed", "core/depth_seed", "OpaqueDepth", "NoHandDepth"))
-				.build());
-		}
-		return pipeline;
-	}
+	private DepthSeed() {}
 
 	static void seed(RenderTarget main, RenderTarget target) {
+		if (pipeline == null) {
+			pipeline = Gpu.depthPipeline("pipeline/depth_seed", "core/depth_seed", "OpaqueDepth", "NoHandDepth");
+		}
 		RenderTarget opaque = SceneDepth.opaque();
 		RenderTarget noHand = SceneDepth.noHand();
 		if (opaque == null) {
@@ -31,12 +24,6 @@ final class DepthSeed {
 		if (noHand == null) {
 			noHand = opaque;
 		}
-
-		try (RenderPass pass = Gpu.depthPass("litematicapass_depth_seed", target)) {
-			Gpu.setPipeline(pass, pipeline());
-			Gpu.bindDepth(pass, "OpaqueDepth", opaque);
-			Gpu.bindDepth(pass, "NoHandDepth", noHand);
-			Gpu.drawScreenQuad(pass);
-		}
+		Gpu.draw(pipeline, target, Gpu.depth("OpaqueDepth", opaque), Gpu.depth("NoHandDepth", noHand));
 	}
 }

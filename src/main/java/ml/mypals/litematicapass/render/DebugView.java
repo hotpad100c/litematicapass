@@ -1,12 +1,9 @@
 package ml.mypals.litematicapass.render;
 
 import com.mojang.blaze3d.pipeline.RenderTarget;
-import com.mojang.renderpearl.api.commands.RenderPass;
-import com.mojang.renderpearl.api.pipeline.RenderPipeline;
-import net.minecraft.client.renderer.RenderPipelines;
 
 import java.util.Locale;
-import java.util.Optional;
+import java.util.Map;
 
 /**
  * 调试辅助工具：用 schematic 管线所使用的其中一个缓冲区替换当前画面。
@@ -37,7 +34,7 @@ public final class DebugView {
 	}
 
 	private static Mode mode = Mode.OFF;
-	private static final RenderPipeline[] PIPELINES = new RenderPipeline[Mode.values().length];
+	private static final Gpu.Pipeline[] PIPELINES = new Gpu.Pipeline[Mode.values().length];
 
 	private DebugView() {}
 
@@ -49,27 +46,18 @@ public final class DebugView {
 		mode = newMode;
 	}
 
-	private static RenderPipeline pipeline(Mode mode) {
-		RenderPipeline pipeline = PIPELINES[mode.ordinal()];
+	static void draw(RenderTarget main, RenderTarget schematic) {
+		Gpu.Pipeline pipeline = PIPELINES[mode.ordinal()];
 		if (pipeline == null) {
-			pipeline = RenderPipelines.register(Gpu.colorOutput(Gpu.screenQuad("pipeline/debug_view/" + mode.id(), "core/debug_view",
-					"SchematicColor", "SchematicDepth", "MainDepth", "OpaqueDepth")
-				.withShaderDefine("MODE", mode.ordinal()), Optional.empty())
-				.build());
+			pipeline = Gpu.colorPipeline("pipeline/debug_view/" + mode.id(), "core/debug_view", false, Map.of("MODE", mode.ordinal()),
+				"SchematicColor", "SchematicDepth", "MainDepth", "OpaqueDepth");
 			PIPELINES[mode.ordinal()] = pipeline;
 		}
-		return pipeline;
-	}
-
-	static void draw(RenderTarget main, RenderTarget schematic) {
 		RenderTarget opaque = SceneDepth.opaque();
-		try (RenderPass pass = Gpu.colorPass("litematicapass_debug_view", main)) {
-			Gpu.setPipeline(pass, pipeline(mode));
-			Gpu.bindColor(pass, "SchematicColor", schematic);
-			Gpu.bindDepth(pass, "SchematicDepth", schematic);
-			Gpu.bindDepth(pass, "MainDepth", main);
-			Gpu.bindDepth(pass, "OpaqueDepth", opaque != null ? opaque : main);
-			Gpu.drawScreenQuad(pass);
-		}
+		Gpu.draw(pipeline, main,
+			Gpu.color("SchematicColor", schematic),
+			Gpu.depth("SchematicDepth", schematic),
+			Gpu.depth("MainDepth", main),
+			Gpu.depth("OpaqueDepth", opaque != null ? opaque : main));
 	}
 }

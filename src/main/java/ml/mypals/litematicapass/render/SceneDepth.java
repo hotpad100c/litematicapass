@@ -49,7 +49,7 @@ public final class SceneDepth {
 		} else if (target.width != width || target.height != height) {
 			target.resize(width, height);
 		}
-		target.copyDepthFrom(main);
+		Gpu.copyDepth(target, main);
 		return target;
 	}
 
