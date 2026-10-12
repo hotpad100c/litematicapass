@@ -55,17 +55,30 @@ val audit: SourceSet = sourceSets.create("audit") {
     runtimeClasspath += sourceSets.main.get().runtimeClasspath + sourceSets.main.get().output
 }
 
+// Development-only mod that creates a fresh world and enters it; see src/smoke and `runSmokeClient`.
+val smoke: SourceSet = sourceSets.create("smoke") {
+    compileClasspath += sourceSets.main.get().compileClasspath + sourceSets.main.get().output
+    runtimeClasspath += sourceSets.main.get().runtimeClasspath + sourceSets.main.get().output
+}
+
 loom {
     fabricModJsonPath = rootProject.file("src/main/resources/fabric.mod.json") // Useful for interface injection
     mods {
         register(property("mod.id") as String) { sourceSet(sourceSets.main.get()) }
         register("litematicapass_audit") { sourceSet(audit) }
+        register("litematicapass_smoke") { sourceSet(smoke) }
     }
     runs {
         register("auditClient") {
             client()
             source(audit)
             // Fabric reports startup errors in a dialog unless headless; the audit must exit instead.
+            vmArg("-Djava.awt.headless=true")
+        }
+        register("smokeClient") {
+            client()
+            source(smoke)
+            // Fabric reports startup errors in a dialog unless headless (the game window itself still opens).
             vmArg("-Djava.awt.headless=true")
         }
     }

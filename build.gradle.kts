@@ -48,10 +48,27 @@ dependencies {
     )) {
         localRuntime(library) { isTransitive = false }
     }
+
+    // The mods as players install them (intermediary names), for `runProductionSmoke`.
+    for (mod in listOf(
+        "net.fabricmc.fabric-api:fabric-api:${prop("deps.fabric_api")}",
+        "maven.modrinth:${prop("deps.litematica")}",
+        "maven.modrinth:${prop("deps.malilib")}",
+        "maven.modrinth:${prop("deps.iris")}",
+        "maven.modrinth:${prop("deps.sodium")}"
+    )) {
+        "productionRuntimeMods"(mod) { isTransitive = false }
+    }
 }
 
 // Development-only mod that checks every mixin applies; see src/audit and `runAuditClient`.
 val audit: SourceSet = sourceSets.create("audit") {
+    compileClasspath += sourceSets.main.get().compileClasspath + sourceSets.main.get().output
+    runtimeClasspath += sourceSets.main.get().runtimeClasspath + sourceSets.main.get().output
+}
+
+// Development-only mod that creates a fresh world and enters it; see src/smoke and `runSmokeClient`.
+val smoke: SourceSet = sourceSets.create("smoke") {
     compileClasspath += sourceSets.main.get().compileClasspath + sourceSets.main.get().output
     runtimeClasspath += sourceSets.main.get().runtimeClasspath + sourceSets.main.get().output
 }
@@ -61,12 +78,19 @@ loom {
     mods {
         register(property("mod.id") as String) { sourceSet(sourceSets.main.get()) }
         register("litematicapass_audit") { sourceSet(audit) }
+        register("litematicapass_smoke") { sourceSet(smoke) }
     }
     runs {
         register("auditClient") {
             client()
             source(audit)
             // Fabric reports startup errors in a dialog unless headless; the audit must exit instead.
+            vmArg("-Djava.awt.headless=true")
+        }
+        register("smokeClient") {
+            client()
+            source(smoke)
+            // Fabric reports startup errors in a dialog unless headless (the game window itself still opens).
             vmArg("-Djava.awt.headless=true")
         }
     }
@@ -121,6 +145,27 @@ tasks {
     named("runAuditClient") {
         val exported = rootProject.file("run/.mixin.out")
         doFirst { exported.deleteRecursively() }
+    }
+
+    // The in-game check (src/smoke) as a remapped jar, and a run of the real game with intermediary names and the
+    // remapped jars, as players run it. Some dependencies only work there (Iris 1.8.0 / 1.8.1 has a mixin that
+    // cannot apply in the development environment).
+    val smokeJar = register<Jar>("smokeJar") {
+        from(smoke.output)
+        archiveClassifier = "smoke-dev"
+        destinationDirectory = layout.buildDirectory.dir("devlibs")
+    }
+    val remapSmokeJar = register<net.fabricmc.loom.task.RemapJarTask>("remapSmokeJar") {
+        inputFile = smokeJar.flatMap { it.archiveFile }
+        archiveClassifier = "smoke"
+        destinationDirectory = layout.buildDirectory.dir("smoke")
+        addNestedDependencies = false
+    }
+    register<net.fabricmc.loom.task.prod.ClientProductionRunTask>("runProductionSmoke") {
+        group = "fabric"
+        mods.setFrom(remapJar, remapSmokeJar, project.configurations.named("productionRuntimeMods"))
+        runDir = rootProject.layout.projectDirectory.dir("run")
+        jvmArgs.add("-Djava.awt.headless=true")
     }
 
     // Builds the version into a shared folder in `build/libs/${mod version}/`
