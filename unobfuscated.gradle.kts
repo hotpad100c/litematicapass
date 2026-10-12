@@ -9,6 +9,13 @@ base.archivesName = property("mod.id") as String
 
 val requiredJava = JavaVersion.VERSION_25
 
+/**
+ * A per-version property. `-Ptry.node=<this node> -Ptry.<name>=<value>` overrides it for this node only, to build
+ * this node's code against another Minecraft version (and its dependencies).
+ */
+fun prop(name: String): String =
+    (if (findProperty("try.node") == stonecutter.current.version) findProperty("try.$name") else null)?.toString()
+        ?: property(name).toString()
 repositories {
     /**
      * Restricts dependency search of the given [groups] to the [maven URL][url],
@@ -22,14 +29,14 @@ repositories {
 }
 
 dependencies {
-    minecraft("com.mojang:minecraft:${property("minecraft")}")
+    minecraft("com.mojang:minecraft:${prop("minecraft")}")
     implementation("net.fabricmc:fabric-loader:${property("deps.fabric_loader")}")
-    implementation("net.fabricmc.fabric-api:fabric-api:${property("deps.fabric_api")}")
+    implementation("net.fabricmc.fabric-api:fabric-api:${prop("deps.fabric_api")}")
 
-    implementation("maven.modrinth:${property("deps.litematica")}")
-    implementation("maven.modrinth:${property("deps.malilib")}")
-    implementation("maven.modrinth:${property("deps.iris")}")
-    implementation("maven.modrinth:${property("deps.sodium")}")
+    implementation("maven.modrinth:${prop("deps.litematica")}")
+    implementation("maven.modrinth:${prop("deps.malilib")}")
+    implementation("maven.modrinth:${prop("deps.iris")}")
+    implementation("maven.modrinth:${prop("deps.sodium")}")
 }
 
 // Development-only mod that checks every mixin applies; see src/audit and `runAuditClient`.
@@ -79,7 +86,7 @@ tasks {
             "id" to project.property("mod.id"),
             "name" to project.property("mod.name"),
             "version" to project.version,
-            "minecraft" to project.property("mod.mc_dep"),
+            "minecraft" to prop("mod.mc_dep"),
             "java" to requiredJava.majorVersion
         )
         inputs.properties(props)

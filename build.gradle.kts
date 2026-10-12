@@ -9,6 +9,13 @@ base.archivesName = property("mod.id") as String
 
 val requiredJava = JavaVersion.VERSION_21
 
+/**
+ * A per-version property. `-Ptry.node=<this node> -Ptry.<name>=<value>` overrides it for this node only, to build
+ * this node's code against another Minecraft version (and its dependencies).
+ */
+fun prop(name: String): String =
+    (if (findProperty("try.node") == stonecutter.current.version) findProperty("try.$name") else null)?.toString()
+        ?: property(name).toString()
 repositories {
     /**
      * Restricts dependency search of the given [groups] to the [maven URL][url],
@@ -22,15 +29,15 @@ repositories {
 }
 
 dependencies {
-    minecraft("com.mojang:minecraft:${property("minecraft")}")
+    minecraft("com.mojang:minecraft:${prop("minecraft")}")
     mappings(loom.officialMojangMappings())
     modImplementation("net.fabricmc:fabric-loader:${property("deps.fabric_loader")}")
-    modImplementation("net.fabricmc.fabric-api:fabric-api:${property("deps.fabric_api")}")
+    modImplementation("net.fabricmc.fabric-api:fabric-api:${prop("deps.fabric_api")}")
 
-    modImplementation("maven.modrinth:${property("deps.litematica")}")
-    modImplementation("maven.modrinth:${property("deps.malilib")}")
-    modImplementation("maven.modrinth:${property("deps.iris")}")
-    modImplementation("maven.modrinth:${property("deps.sodium")}")
+    modImplementation("maven.modrinth:${prop("deps.litematica")}")
+    modImplementation("maven.modrinth:${prop("deps.malilib")}")
+    modImplementation("maven.modrinth:${prop("deps.iris")}")
+    modImplementation("maven.modrinth:${prop("deps.sodium")}")
 }
 
 // Development-only mod that checks every mixin applies; see src/audit and `runAuditClient`.
@@ -80,7 +87,7 @@ tasks {
             "id" to project.property("mod.id"),
             "name" to project.property("mod.name"),
             "version" to project.version,
-            "minecraft" to project.property("mod.mc_dep"),
+            "minecraft" to prop("mod.mc_dep"),
             "java" to requiredJava.majorVersion
         )
         inputs.properties(props)

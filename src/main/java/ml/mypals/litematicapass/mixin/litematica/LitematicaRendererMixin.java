@@ -9,7 +9,7 @@ import ml.mypals.litematicapass.render.SchematicTarget;
 import net.minecraft.client.renderer.SubmitNodeCollector;
 import net.minecraft.client.renderer.SubmitNodeStorage;
 import net.minecraft.client.renderer.chunk.ChunkSectionLayerGroup;
-//? if <26.3 {
+//? if <26.3 && >=1.21.11 {
 /*import com.mojang.renderpearl.api.textures.GpuSampler;
 import org.jspecify.annotations.Nullable;
 *///?}
@@ -37,13 +37,28 @@ public class LitematicaRendererMixin {
 			SchematicTarget.end();
 		}
 	}
-	//?} else {
+	//?} else if >=1.21.11 {
 	/*// Litematica picks the output target itself here (see ChunkRenderBatchDrawMixin).
 	@WrapMethod(method = "piecewiseDrawBlockLayerGroup")
 	private void litematicapass$routeTerrain(ChunkSectionLayerGroup group, @Nullable GpuSampler sampler, Operation<Void> original) {
 		SchematicTarget.begin();
 		try {
 			original.call(group, sampler);
+			// The entities and block entities go into the same target, after the opaque terrain.
+			if (SchematicTarget.isRouting() && group == ChunkSectionLayerGroup.OPAQUE) {
+				SchematicEntities.draw(SchematicTarget.prepareForDraw());
+			}
+		} finally {
+			SchematicTarget.end();
+		}
+	}
+	*///?} else {
+	/*// Litematica picks the output target itself here (see ChunkRenderBatchDrawMixin); 0.24 and older take no sampler.
+	@WrapMethod(method = "piecewiseDrawBlockLayerGroup")
+	private void litematicapass$routeTerrain(ChunkSectionLayerGroup group, Operation<Void> original) {
+		SchematicTarget.begin();
+		try {
+			original.call(group);
 			// The entities and block entities go into the same target, after the opaque terrain.
 			if (SchematicTarget.isRouting() && group == ChunkSectionLayerGroup.OPAQUE) {
 				SchematicEntities.draw(SchematicTarget.prepareForDraw());

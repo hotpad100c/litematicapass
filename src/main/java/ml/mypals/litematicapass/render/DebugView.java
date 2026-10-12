@@ -4,8 +4,6 @@ import com.mojang.blaze3d.pipeline.RenderTarget;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.renderpearl.api.commands.RenderPass;
 import com.mojang.renderpearl.api.pipeline.RenderPipeline;
-import com.mojang.renderpearl.api.textures.FilterMode;
-import com.mojang.renderpearl.api.textures.GpuSampler;
 import com.mojang.renderpearl.api.textures.GpuTextureView;
 import net.minecraft.client.renderer.RenderPipelines;
 
@@ -66,16 +64,15 @@ public final class DebugView {
 	}
 
 	static void draw(RenderTarget main, RenderTarget schematic) {
-		GpuSampler sampler = RenderSystem.getSamplerCache().getClampToEdge(FilterMode.NEAREST);
 		GpuTextureView opaque = SceneDepth.opaqueView();
         assert main.getColorTextureView() != null;
 		try (RenderPass pass = Gpu.openPass("litematicapass_debug_view", main.getColorTextureView(), null, main.width, main.height)) {
 			Gpu.setPipeline(pass, pipeline(mode));
 			RenderSystem.bindDefaultUniforms(pass);
-			Gpu.bindTexture(pass, "SchematicColor", schematic.getColorTextureView(), sampler);
-			Gpu.bindTexture(pass, "SchematicDepth", schematic.getDepthTextureView(), sampler);
-			Gpu.bindTexture(pass, "MainDepth", main.getDepthTextureView(), sampler);
-			Gpu.bindTexture(pass, "OpaqueDepth", opaque != null ? opaque : main.getDepthTextureView(), sampler);
+			Gpu.bindTexture(pass, "SchematicColor", schematic.getColorTextureView());
+			Gpu.bindTexture(pass, "SchematicDepth", schematic.getDepthTextureView());
+			Gpu.bindTexture(pass, "MainDepth", main.getDepthTextureView());
+			Gpu.bindTexture(pass, "OpaqueDepth", opaque != null ? opaque : main.getDepthTextureView());
 			Gpu.drawScreenQuad(pass);
 		}
 	}

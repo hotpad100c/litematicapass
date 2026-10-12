@@ -6,8 +6,10 @@ import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.renderpearl.api.commands.RenderPass;
 import com.mojang.renderpearl.api.pipeline.BlendFunction;
 import com.mojang.renderpearl.api.pipeline.RenderPipeline;
-import com.mojang.renderpearl.api.textures.GpuSampler;
 import com.mojang.renderpearl.api.textures.GpuTextureView;
+//? if >=1.21.11 {
+import com.mojang.renderpearl.api.textures.FilterMode;
+//?}
 import ml.mypals.litematicapass.LitematicaPass;
 import net.minecraft.client.Minecraft;
 import org.jspecify.annotations.Nullable;
@@ -183,11 +185,14 @@ final class Gpu {
 		*///?}
 	}
 
-	static void bindTexture(RenderPass pass, String name, GpuTextureView view, GpuSampler sampler) {
+	/** Binds a texture that the shaders read with {@code texelFetch}, so its filtering does not matter. */
+	static void bindTexture(RenderPass pass, String name, GpuTextureView view) {
 		//? if >=26.3 {
-		pass.setUniform(name, view, sampler);
-		//?} else {
-		/*pass.bindTexture(name, view, sampler);
+		pass.setUniform(name, view, RenderSystem.getSamplerCache().getClampToEdge(FilterMode.NEAREST));
+		//?} else if >=1.21.11 {
+		/*pass.bindTexture(name, view, RenderSystem.getSamplerCache().getClampToEdge(FilterMode.NEAREST));
+		*///?} else {
+		/*pass.bindSampler(name, view);
 		*///?}
 	}
 

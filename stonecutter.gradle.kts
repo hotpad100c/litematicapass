@@ -30,6 +30,12 @@ stonecutter parameters {
             replace("com.mojang.renderpearl.api.textures.GpuTextureView", "com.mojang.blaze3d.textures.GpuTextureView")
         }
 
+        // 1.21.11 renamed ResourceLocation to Identifier and started shipping JSpecify
+        string(eval(current.version, "<1.21.11")) {
+            replace("Identifier", "ResourceLocation")
+            replace("org.jspecify.annotations.Nullable", "org.jetbrains.annotations.Nullable")
+        }
+
         // Fabric API for 26.1 renamed ClientCommandManager to ClientCommands
         string(eval(current.version, "<26.1")) {
             replace("ClientCommands", "ClientCommandManager")

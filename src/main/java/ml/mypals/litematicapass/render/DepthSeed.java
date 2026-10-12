@@ -4,8 +4,6 @@ import com.mojang.blaze3d.pipeline.RenderTarget;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.renderpearl.api.commands.RenderPass;
 import com.mojang.renderpearl.api.pipeline.RenderPipeline;
-import com.mojang.renderpearl.api.textures.FilterMode;
-import com.mojang.renderpearl.api.textures.GpuSampler;
 import com.mojang.renderpearl.api.textures.GpuTextureView;
 import net.minecraft.client.renderer.RenderPipelines;
 
@@ -36,13 +34,12 @@ final class DepthSeed {
 			noHand = opaque;
 		}
 
-		GpuSampler sampler = RenderSystem.getSamplerCache().getClampToEdge(FilterMode.NEAREST);
         assert target.getDepthTextureView() != null;
 		try (RenderPass pass = Gpu.openPass("litematicapass_depth_seed", Gpu.depthPassColor(target), target.getDepthTextureView(), target.width, target.height)) {
 			Gpu.setPipeline(pass, pipeline());
 			RenderSystem.bindDefaultUniforms(pass);
-			Gpu.bindTexture(pass, "OpaqueDepth", opaque, sampler);
-			Gpu.bindTexture(pass, "NoHandDepth", noHand, sampler);
+			Gpu.bindTexture(pass, "OpaqueDepth", opaque);
+			Gpu.bindTexture(pass, "NoHandDepth", noHand);
 			Gpu.drawScreenQuad(pass);
 		}
 	}
