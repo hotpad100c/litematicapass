@@ -16,8 +16,9 @@ public final class LitematicaPassMixinPlugin implements IMixinConfigPlugin {
 		String name = mixinClassName.startsWith(PACKAGE) ? mixinClassName.substring(PACKAGE.length()) : mixinClassName;
 		if (name.startsWith("iris.")) {
 			if (name.equals("iris.IrisShaderOverrideMixin")) {
-				// Only Iris builds without their own bypass switch need it.
-				//? if >=1.21.4 {
+				// Before 26.3, Iris locks colour and depth writes off for a vanilla shader whenever it would override
+				// shaders, bypass or not; while routing it must not want to override (26.3 handles the bypass itself).
+				//? if >=26.3 {
 				return false;
 				//?}
 			}

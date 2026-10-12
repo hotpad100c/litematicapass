@@ -7,8 +7,8 @@ import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 
 /**
- * Iris 1.8.1 及更早（Minecraft 1.21.3 及更早）没有 ImmediateState.bypass：重定向期间让 Iris 不替换着色器，
- * 和新版 Iris 的 bypass 效果相同。只在这些版本上应用（见 LitematicaPassMixinPlugin）。
+ * 26.3 之前：重定向期间让 Iris 不想替换着色器。Iris 1.8.1 及更早没有 ImmediateState.bypass，这就是 bypass；
+ * 有 bypass 的版本里，只要 Iris 想替换，原版着色器就会被它锁住颜色和深度写入（什么都画不出）。只在这些版本上应用（见 LitematicaPassMixinPlugin）。
  */
 @Mixin(value = IrisRenderingPipeline.class, remap = false)
 public class IrisShaderOverrideMixin {
