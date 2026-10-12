@@ -6,8 +6,14 @@ import com.mojang.blaze3d.pipeline.RenderTarget;
 import fi.dy.masa.litematica.render.LitematicaRenderer;
 import ml.mypals.litematicapass.render.SchematicEntities;
 import ml.mypals.litematicapass.render.SchematicTarget;
+//? if >=1.21.9 {
 import net.minecraft.client.renderer.SubmitNodeCollector;
 import net.minecraft.client.renderer.SubmitNodeStorage;
+//?} else {
+/*import com.mojang.blaze3d.vertex.PoseStack;
+import net.minecraft.client.renderer.MultiBufferSource;
+import net.minecraft.util.profiling.ProfilerFiller;
+*///?}
 import net.minecraft.client.renderer.chunk.ChunkSectionLayerGroup;
 //? if <26.3 && >=1.21.11 {
 /*import com.mojang.renderpearl.api.textures.GpuSampler;
@@ -69,6 +75,7 @@ public class LitematicaRendererMixin {
 	}
 	*///?}
 
+	//? if >=1.21.9 {
 	/** 实体和方块实体提交到我们自己的 SubmitNodeStorage，而不是原版的。 */
 	@ModifyVariable(method = "piecewiseRenderEntities", at = @At("HEAD"), argsOnly = true)
 	private SubmitNodeCollector litematicapass$routeEntities(SubmitNodeCollector queue) {
@@ -79,6 +86,28 @@ public class LitematicaRendererMixin {
 	private SubmitNodeStorage litematicapass$routeBlockEntities(SubmitNodeStorage queue) {
 		return SchematicEntities.route(queue);
 	}
+	//?} else {
+	/*// 实体和方块实体画进我们自己的 buffer source，再冲到我们的目标里（见 SchematicEntities）。
+	@WrapMethod(method = "piecewiseRenderEntities")
+	private void litematicapass$routeEntities(PoseStack matrices, MultiBufferSource.BufferSource immediate, float partialTicks, ProfilerFiller profiler,
+		Operation<Void> original) {
+		if (SchematicTarget.isActive()) {
+			SchematicEntities.drawInto(source -> original.call(matrices, source, partialTicks, profiler));
+		} else {
+			original.call(matrices, immediate, partialTicks, profiler);
+		}
+	}
+
+	@WrapMethod(method = "piecewiseRenderBlockEntities")
+	private void litematicapass$routeBlockEntities(PoseStack matrices, MultiBufferSource.BufferSource immediate, MultiBufferSource.BufferSource effects,
+		float partialTicks, ProfilerFiller profiler, Operation<Void> original) {
+		if (SchematicTarget.isActive()) {
+			SchematicEntities.drawInto(source -> original.call(matrices, source, source, partialTicks, profiler));
+		} else {
+			original.call(matrices, immediate, effects, partialTicks, profiler);
+		}
+	}
+	*///?}
 
 	@Inject(method = "piecewiseRenderOverlay", at = @At("HEAD"))
 	private void litematicapass$beginOverlay(CallbackInfo ci) {
