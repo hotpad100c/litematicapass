@@ -113,7 +113,11 @@ public final class SmokeTest implements ClientModInitializer {
 		if (!this.requestedScreen && overlay(mc) == null && this.ticks > 40) {
 			this.requestedScreen = true;
 			log("opening the create-world screen");
+			//? if >=1.19 {
 			CreateWorldScreen.openFresh(mc, null);
+			//?} else {
+			/*mc.setScreen(CreateWorldScreen.createFresh(null));
+			*///?}
 		}
 	}
 
