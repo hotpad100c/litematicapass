@@ -1,7 +1,9 @@
 package ml.mypals.litematicapass.render;
 
 import com.mojang.blaze3d.pipeline.RenderTarget;
+//? if >=1.17 {
 import com.mojang.blaze3d.pipeline.TextureTarget;
+//?}
 import ml.mypals.litematicapass.LitematicaPass;
 import net.minecraft.client.Minecraft;
 import org.jetbrains.annotations.Nullable;
@@ -38,8 +40,13 @@ final class Gpu {
 	}
 
 	/** A colour + depth target. */
-	static TextureTarget colorDepthTarget(String label, int width, int height) {
-		TextureTarget target = new TextureTarget(width, height, true, Minecraft.ON_OSX);
+	static RenderTarget colorDepthTarget(String label, int width, int height) {
+		//? if >=1.17 {
+		RenderTarget target = new TextureTarget(width, height, true, Minecraft.ON_OSX);
+		//?} else {
+		/*// Before 1.17 RenderTarget is the texture-backed target itself.
+		RenderTarget target = new RenderTarget(width, height, true, Minecraft.ON_OSX);
+		*///?}
 		target.setClearColor(0, 0, 0, 0);
 		return target;
 	}
@@ -49,7 +56,7 @@ final class Gpu {
 	}
 
 	/** A target whose depth is used; older versions always give it a colour texture too. */
-	static TextureTarget depthTarget(String label, int width, int height) {
+	static RenderTarget depthTarget(String label, int width, int height) {
 		return colorDepthTarget(label, width, height);
 	}
 
@@ -237,6 +244,14 @@ final class Gpu {
 
 	private static int emptyVertexArray;
 
+	private static void bindVertexArray(int vertexArray) {
+		//? if >=1.17 {
+		GlStateManager._glBindVertexArray(vertexArray);
+		//?} else {
+		/*GL30.glBindVertexArray(vertexArray);
+		*///?}
+	}
+
 	// Draws the pipeline over the whole of output, keeping its contents, and restores the GL state it touches.
 	static void draw(Pipeline pipeline, RenderTarget output, Sampler... samplers) {
 		if (pipeline.failed) {
@@ -253,7 +268,11 @@ final class Gpu {
 			}
 		}
 		if (emptyVertexArray == 0) {
+			//? if >=1.17 {
 			emptyVertexArray = GlStateManager._glGenVertexArrays();
+			//?} else {
+			/*emptyVertexArray = GL30.glGenVertexArrays();
+			*///?}
 		}
 		int drawFramebuffer = GL11.glGetInteger(GL30.GL_DRAW_FRAMEBUFFER_BINDING);
 		int readFramebuffer = GL11.glGetInteger(GL30.GL_READ_FRAMEBUFFER_BINDING);
@@ -261,7 +280,11 @@ final class Gpu {
 		GL11.glGetIntegerv(GL11.GL_VIEWPORT, viewport);
 		boolean depthTest = GL11.glIsEnabled(GL11.GL_DEPTH_TEST);
 		boolean blend = GL11.glIsEnabled(GL11.GL_BLEND);
+		//? if >=1.17 {
 		int activeTexture = GlStateManager._getActiveTexture();
+		//?} else {
+		/*int activeTexture = GL11.glGetInteger(GL13.GL_ACTIVE_TEXTURE);
+		*///?}
 		// Minecraft caches the bound program, vertex array and textures; restore exactly what was bound, or its next
 		// draw runs without its shader (depth only, no colour).
 		int program = GL11.glGetInteger(GL20.GL_CURRENT_PROGRAM);
@@ -297,10 +320,10 @@ final class Gpu {
 			GlStateManager._bindTexture(samplers[i].depth() ? samplers[i].target().getDepthTextureId() : samplers[i].target().getColorTextureId());
 			GlStateManager._glUniform1i(pipeline.location(samplers[i].name()), i);
 		}
-		GlStateManager._glBindVertexArray(emptyVertexArray);
+		bindVertexArray(emptyVertexArray);
 		GL11.glDrawArrays(GL11.GL_TRIANGLES, 0, 3);
 
-		GlStateManager._glBindVertexArray(vertexArray);
+		bindVertexArray(vertexArray);
 		GlStateManager._glUseProgram(program);
 		for (int i = samplers.length - 1; i >= 0; i--) {
 			GlStateManager._activeTexture(GL13.GL_TEXTURE0 + i);

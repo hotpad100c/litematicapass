@@ -21,8 +21,10 @@ import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.client.gui.screens.worldselection.CreateWorldScreen;
 //? if >=1.19.4 {
 import net.minecraft.client.gui.screens.worldselection.WorldCreationUiState;
-//?} else {
+//?} else if >=1.17 {
 /*import net.minecraft.client.gui.components.CycleButton;
+*///?} else {
+/*import net.minecraft.client.gui.components.Button;
 *///?}
 
 import java.io.IOException;
@@ -96,11 +98,18 @@ public final class SmokeTest implements ClientModInitializer {
 			WorldCreationUiState state = screen.getUiState();
 			state.setName(WORLD);
 			state.setGameMode(WorldCreationUiState.SelectedGameMode.CREATIVE);
-			//?} else {
+			//?} else if >=1.17 {
 			/*CreateWorldScreenAccessor legacy = (CreateWorldScreenAccessor) screen;
 			legacy.litematicapass$nameEdit().setValue(WORLD);
 			CycleButton<?> mode = legacy.litematicapass$modeButton();
 			for (int i = 0; i < 4 && !"CREATIVE".equals(String.valueOf(mode.getValue())); i++) {
+				mode.onPress();
+			}
+			*///?} else {
+			/*CreateWorldScreenAccessor legacy = (CreateWorldScreenAccessor) screen;
+			legacy.litematicapass$nameEdit().setValue(WORLD);
+			Button mode = legacy.litematicapass$modeButton();
+			for (int i = 0; i < 4 && !legacy.litematicapass$commands(); i++) {
 				mode.onPress();
 			}
 			*///?}
@@ -146,7 +155,11 @@ public final class SmokeTest implements ClientModInitializer {
 		}
 		if (this.placedAt < 0 && this.ticksInWorld > 20 && mc.player.getY() > 190) {
 			// Hover in place (creative flight) so the view stays on the schematic.
+			//? if >=1.17 {
 			mc.player.getAbilities().flying = true;
+			//?} else {
+			/*mc.player.abilities.flying = true;
+			*///?}
 			mc.player.onUpdateAbilities();
 			placeSchematic(mc);
 			this.placedAt = this.ticksInWorld;

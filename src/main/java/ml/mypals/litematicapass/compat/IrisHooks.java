@@ -2,9 +2,10 @@ package ml.mypals.litematicapass.compat;
 
 import net.irisshaders.iris.Iris;
 import net.irisshaders.iris.api.v0.IrisApi;
-//? if >=1.18.2 {
+//? if >=1.18.2 || <1.17 {
 import net.irisshaders.iris.vertices.ImmediateState;
-//?} else {
+//?}
+//? if <1.18.2 {
 /*import ml.mypals.litematicapass.mixin.iris.LegacyIrisPipelineAccessor;
 *///?}
 
@@ -27,8 +28,12 @@ final class IrisHooks {
 	}
 	static void setBypass(boolean bypass) {
 		IrisHooks.bypass = bypass;
+		//? if <1.17 {
+		/*// Iris for fixed-function rendering only notices which target is bound when one is bound for writing.
+		Iris.getPipelineManager().getPipeline().ifPresent(pipeline -> pipeline.getRenderTargetStateListener().setIsMainBound(!bypass));
+		*///?}
 	}
-	//? if >=1.18.2 {
+	//? if >=1.18.2 || <1.17 {
 	static boolean isRenderingLevel() {
 		return ImmediateState.isRenderingLevel;
 	}
@@ -36,20 +41,23 @@ final class IrisHooks {
 	static void setRenderingLevel(boolean renderingLevel) {
 		ImmediateState.isRenderingLevel = renderingLevel;
 	}
-
-	static int sceneDepthTexture() {
-		return 0;
-	}
 	//?} else {
-	/*// Iris 1.2 and older (Minecraft 1.18.1 and older) have no such switch: they never widen the entity formats.
+	/*// Iris 1.2 and older for Minecraft 1.17 to 1.18.1 have no such switch: they never widen the entity formats.
 	static boolean isRenderingLevel() {
 		return false;
 	}
 
 	static void setRenderingLevel(boolean renderingLevel) {
 	}
+	*///?}
 
-	// They keep the scene depth in their own texture. While routing, IrisShaderOverrideMixin hides the pipeline.
+	//? if >=1.18.2 {
+	static int sceneDepthTexture() {
+		return 0;
+	}
+	//?} else {
+	/*// Iris for Minecraft 1.18.1 and older keeps the scene depth in its own texture. While routing,
+	// IrisShaderOverrideMixin may hide the pipeline.
 	static int sceneDepthTexture() {
 		boolean routing = bypass;
 		bypass = false;
@@ -57,7 +65,7 @@ final class IrisHooks {
 			if (!(Iris.getPipelineManager().getPipelineNullable() instanceof LegacyIrisPipelineAccessor pipeline)) {
 				return 0;
 			}
-			// Most builds hand out their DepthTexture, the later ones for 1.17.1 its texture ID directly.
+			// Most builds hand out their DepthTexture, some (the later ones for 1.17.1, the one for 1.16.5) its ID.
 			Object depth = pipeline.litematicapass$renderTargets().getDepthTexture();
 			return depth instanceof Integer id ? id : textureId(depth);
 		} finally {

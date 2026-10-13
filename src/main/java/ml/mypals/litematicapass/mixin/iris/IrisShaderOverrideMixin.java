@@ -4,6 +4,9 @@ import com.llamalad7.mixinextras.injector.ModifyReturnValue;
 import ml.mypals.litematicapass.compat.IrisCompat;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
+//? if <1.17 {
+/*import org.spongepowered.asm.mixin.injection.ModifyVariable;
+*///?}
 
 /**
  * 26.3 之前：重定向期间让 Iris 不想替换着色器。Iris 1.8.1 及更早没有 ImmediateState.bypass，这就是 bypass；
@@ -18,14 +21,24 @@ public class IrisShaderOverrideMixin {
 		return original && !IrisCompat.bypass();
 	}
 }
-//?} else {
-/*// Iris 1.2 and older (Minecraft 1.18.1 and older) replace the terrain shaders whenever a pipeline exists, without
+//?} else if >=1.17 {
+/*// Iris 1.2 and older (Minecraft 1.17 to 1.18.1) replace the terrain shaders whenever a pipeline exists, without
 // asking it; while routing, Iris finds no pipeline.
 @Mixin(value = net.coderbot.iris.pipeline.PipelineManager.class, remap = false)
 public class IrisShaderOverrideMixin {
 	@ModifyReturnValue(method = "getPipelineNullable", at = @At("RETURN"))
 	private net.coderbot.iris.pipeline.WorldRenderingPipeline litematicapass$bypass(net.coderbot.iris.pipeline.WorldRenderingPipeline original) {
 		return IrisCompat.bypass() ? null : original;
+	}
+}
+*///?} else {
+/*// Before 1.17 (fixed-function rendering) Iris only binds its programs while it believes the main target is bound;
+// while routing, it is not (IrisHooks.setBypass tells it so as well).
+@Mixin(value = net.irisshaders.iris.pipeline.IrisRenderingPipeline.class, remap = false)
+public class IrisShaderOverrideMixin {
+	@ModifyVariable(method = "setIsMainBound", at = @At("HEAD"), argsOnly = true)
+	private boolean litematicapass$bypass(boolean mainBound) {
+		return mainBound && !IrisCompat.bypass();
 	}
 }
 *///?}

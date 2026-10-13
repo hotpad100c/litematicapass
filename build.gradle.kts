@@ -40,7 +40,8 @@ val nestedLibraries = tasks.register<Sync>("nestedLibraries") {
     from({ nestingJars.files.map { zipTree(it) } }) {
         include("META-INF/jars/*.jar")
         exclude("META-INF/jars/fabric-*")
-        // Minecraft brings its own slf4j (Iris 1.2 nests an older one, which hides every mod from Fabric Loader).
+        // Older Iris nests slf4j as a generated mod, which on the classpath hides every mod from Fabric Loader; see
+        // below for where it comes from instead.
         exclude("META-INF/jars/slf4j-*")
         eachFile { path = name }
     }
@@ -64,6 +65,10 @@ dependencies {
     // build) in their jars, but the development runtime does not load the nested jars of dependencies; without them
     // Iris fails as soon as it reads a shader pack. Put the copies from those jars themselves on the runtime classpath.
     localRuntime(fileTree(nestedLibraries.map { it.destinationDir }) { include("*.jar") }.builtBy(nestedLibraries))
+    // Minecraft brings slf4j from 1.18; Iris for older versions needs it, as a plain library.
+    if (stonecutter.eval(stonecutter.current.version, "<1.18")) {
+        localRuntime("org.slf4j:slf4j-api:1.7.36")
+    }
 
     // The mods as players install them (intermediary names), for `runProductionSmoke`.
     for (mod in listOf(

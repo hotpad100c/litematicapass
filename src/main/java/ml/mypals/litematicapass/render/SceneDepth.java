@@ -1,7 +1,6 @@
 package ml.mypals.litematicapass.render;
 
 import com.mojang.blaze3d.pipeline.RenderTarget;
-import com.mojang.blaze3d.pipeline.TextureTarget;
 import fi.dy.masa.litematica.config.Configs;
 import ml.mypals.litematicapass.compat.IrisCompat;
 import org.jetbrains.annotations.Nullable;
@@ -13,8 +12,8 @@ import org.jetbrains.annotations.Nullable;
  * Iris's internals; see {@code IrisRenderingPipelineMixin} for the capture points.
  */
 public final class SceneDepth {
-	private static TextureTarget noHand;
-	private static TextureTarget opaque;
+	private static RenderTarget noHand;
+	private static RenderTarget opaque;
 	private static boolean noHandReady;
 	private static boolean opaqueReady;
 
@@ -47,12 +46,13 @@ public final class SceneDepth {
 	 */
 	static void syncMainDepth() {
 		int texture = IrisCompat.sceneDepthTexture();
-		if (texture != 0) {
-			Gpu.copyDepthTexture(texture, Gpu.mainTarget());
+		RenderTarget main = Gpu.mainTarget();
+		if (texture != 0 && texture != main.getDepthTextureId()) {
+			Gpu.copyDepthTexture(texture, main);
 		}
 	}
 
-	private static TextureTarget copy(@Nullable TextureTarget target, String label) {
+	private static RenderTarget copy(@Nullable RenderTarget target, String label) {
 		syncMainDepth();
 		RenderTarget main = Gpu.mainTarget();
 		int width = Math.max(1, main.width);

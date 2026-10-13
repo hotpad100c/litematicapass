@@ -25,7 +25,8 @@ stonecutter {
             "1.19.3",
             "1.18.2",
             "1.18.1",
-            "1.17.1"
+            "1.17.1",
+            "1.16.5"
         ).buildscript("build.gradle.kts")
         vcsVersion = "1.21.1"
     }

@@ -1,7 +1,6 @@
 package ml.mypals.litematicapass.render;
 
 import com.mojang.blaze3d.pipeline.RenderTarget;
-import com.mojang.blaze3d.pipeline.TextureTarget;
 import ml.mypals.litematicapass.compat.IrisCompat;
 
 /**
@@ -10,7 +9,7 @@ import ml.mypals.litematicapass.compat.IrisCompat;
  * 在帧结束时，渲染结果会被深度合并回主目标上（ {@link SchematicComposite}）。
  */
 public final class SchematicTarget {
-	private static TextureTarget target;
+	private static RenderTarget target;
 
 	private static int bypassDepth;
 	private static boolean bypassApplied;

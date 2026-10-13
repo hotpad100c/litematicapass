@@ -79,8 +79,8 @@ public class LitematicaRendererMixin {
 		SchematicTarget.end();
 	}
 
-	//? if <1.18.2 {
-	/*// Iris 1.2 and older (Minecraft 1.18.1 and older) draw the translucent layer again in their shadow pass, through the
+	//? if <1.18.2 && >=1.17 {
+	/*// Iris 1.2 and older (Minecraft 1.17 to 1.18.1) draw the translucent layer again in their shadow pass, through the
 	// vanilla method Litematica draws its translucent blocks and overlay from. Litematica prepares the schematic once a
 	// frame, before that shadow pass, and the cleanup after its overlay would leave the main pass with nothing to draw.
 	@Inject(method = "cleanup", at = @At("HEAD"), cancellable = true)

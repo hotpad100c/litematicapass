@@ -3,8 +3,12 @@ package ml.mypals.litematicapass.smoke.mixin;
 import net.minecraft.client.gui.screens.worldselection.CreateWorldScreen;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.gen.Invoker;
-//? if <1.19.4 {
+//? if <1.19.4 && >=1.17 {
 /*import net.minecraft.client.gui.components.CycleButton;
+import net.minecraft.client.gui.components.EditBox;
+import org.spongepowered.asm.mixin.gen.Accessor;
+*///?} else if <1.17 {
+/*import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.EditBox;
 import org.spongepowered.asm.mixin.gen.Accessor;
 *///?}
@@ -15,7 +19,7 @@ public interface CreateWorldScreenAccessor {
 	@Invoker("onCreate")
 	void litematicapass$onCreate();
 
-	//? if <1.19.4 {
+	//? if <1.19.4 && >=1.17 {
 	/*// Before 1.19.4 (no WorldCreationUiState) the screen keeps the name and game mode itself; the game mode type is
 	// package-private, so SmokeTest presses its button instead.
 	@Accessor("nameEdit")
@@ -23,5 +27,15 @@ public interface CreateWorldScreenAccessor {
 
 	@Accessor("modeButton")
 	CycleButton<?> litematicapass$modeButton();
+	*///?} else if <1.17 {
+	/*// Before 1.17 the game mode button is a plain button, and only creative turns cheats on by itself.
+	@Accessor("nameEdit")
+	EditBox litematicapass$nameEdit();
+
+	@Accessor("modeButton")
+	Button litematicapass$modeButton();
+
+	@Accessor("commands")
+	boolean litematicapass$commands();
 	*///?}
 }

@@ -17,13 +17,23 @@ import net.minecraft.network.chat.TextComponent;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientLifecycleEvents;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
+//? if >=1.18 {
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+//?} else {
+/*import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+*///?}
 
 public class LitematicaPass implements ClientModInitializer {
 	public static final String MOD_ID = "litematicapass";
 
+	//? if >=1.18 {
 	public static final Logger LOGGER = LoggerFactory.getLogger(MOD_ID);
+	//?} else {
+	/*// Minecraft logs through Log4j directly before 1.18.
+	public static final Logger LOGGER = LogManager.getLogger(MOD_ID);
+	*///?}
 
 	@Override
 	public void onInitializeClient() {
