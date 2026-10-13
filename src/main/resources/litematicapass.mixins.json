@@ -8,6 +8,8 @@
     "LevelRendererMixin",
     "MinecraftAccessor",
     "MinecraftMixin",
+    "dev.EditBoxAccessor",
+    "dev.MalilibTextFieldDevMixin",
     "iris.IrisRenderingPipelineMixin",
     "iris.IrisShaderOverrideMixin",
     "iris.LegacyIrisPipelineAccessor",

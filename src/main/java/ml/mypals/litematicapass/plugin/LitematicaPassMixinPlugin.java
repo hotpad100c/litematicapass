@@ -22,6 +22,10 @@ public final class LitematicaPassMixinPlugin implements IMixinConfigPlugin {
 	@Override
 	public boolean shouldApplyMixin(String targetClassName, String mixinClassName) {
 		String name = mixinClassName.startsWith(PACKAGE) ? mixinClassName.substring(PACKAGE.length()) : mixinClassName;
+		if (name.startsWith("dev.")) {
+			// Workarounds for problems that only the development environment's Mojang names cause.
+			return FabricLoader.getInstance().isDevelopmentEnvironment();
+		}
 		if (name.equals("iris.LegacyIrisPipelineAccessor")) {
 			// Only Iris 1.2 and older (Minecraft 1.18.1 and older) keep the scene depth in their own texture.
 			//? if >=1.18.2 {
