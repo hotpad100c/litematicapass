@@ -12,7 +12,7 @@
 		"sources": "https://github.com/FabricMC/fabric-example-mod"
 	},
 	"license": "CC0-1.0",
-	"icon": "icon-tp.png",
+	"icon": "assets/litematicapass/icon.png",
 	"environment": "client",
 	"entrypoints": {
 		"client": [
