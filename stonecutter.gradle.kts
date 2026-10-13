@@ -6,6 +6,30 @@ plugins {
 
 stonecutter active "26.3"
 
+// The versions share one run directory (runDir in the build scripts). When several versions' run tasks are run in
+// one build, each waits for every version's asset download (which writes there) and they run one after another.
+fun versionParts(version: String) = version.split('.').map { it.toIntOrNull() ?: 0 }
+fun isOlder(a: String, b: String): Boolean {
+    val x = versionParts(a)
+    val y = versionParts(b)
+    for (i in 0 until maxOf(x.size, y.size)) {
+        val d = x.getOrElse(i) { 0 } - y.getOrElse(i) { 0 }
+        if (d != 0) return d < 0
+    }
+    return false
+}
+subprojects {
+    val node = this
+    tasks.withType<net.fabricmc.loom.task.AbstractRunTask>().configureEach {
+        rootProject.subprojects.filter { it != node }.forEach { other ->
+            mustRunAfter(other.tasks.matching { it.name == "downloadAssets" })
+            if (isOlder(other.name, node.name)) {
+                mustRunAfter(other.tasks.withType<net.fabricmc.loom.task.AbstractRunTask>())
+            }
+        }
+    }
+}
+
 // See https://stonecutter.kikugie.dev/wiki/config/params
 stonecutter parameters {
     swaps["mod_version"] = "\"${property("mod.version")}\";"
