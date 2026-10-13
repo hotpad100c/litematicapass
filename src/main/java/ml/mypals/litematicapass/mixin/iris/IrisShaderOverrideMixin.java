@@ -20,6 +20,13 @@ public class IrisShaderOverrideMixin {
 	private boolean litematicapass$bypass(boolean original) {
 		return original && !IrisCompat.bypass();
 	}
+
+	// Iris picks its block entity (and hand) shaders by the phase before asking shouldOverrideShaders, and Litematica
+	// draws the schematic's block entities during the block entity phase.
+	@ModifyReturnValue(method = "getPhase", at = @At("RETURN"))
+	private net.irisshaders.iris.pipeline.WorldRenderingPhase litematicapass$noPhase(net.irisshaders.iris.pipeline.WorldRenderingPhase original) {
+		return IrisCompat.bypass() ? net.irisshaders.iris.pipeline.WorldRenderingPhase.NONE : original;
+	}
 }
 //?} else if >=1.17 {
 /*// Iris 1.2 and older (Minecraft 1.17 to 1.18.1) replace the terrain shaders whenever a pipeline exists, without

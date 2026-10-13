@@ -182,20 +182,24 @@ public final class SmokeTest implements ClientModInitializer {
 	}
 
 	/**
-	 * A 21 x 12 wall, 3 blocks in front of the player, filling the view (the first-person arm included, which must stay
-	 * in front of it): rows of stone, glass, gold and planks.
+	 * A 21 x 12 wall, 4 blocks in front of the player, filling the view (the first-person arm included, which must stay
+	 * in front of it): rows of stone, glass, gold and planks. In front of it, at eye level, a row of chests (block
+	 * entities, drawn by their renderer instead of the chunk mesh), which the wall behind them must not hide.
 	 */
 	private static void placeSchematic(Minecraft mc) {
 		AreaSelection area = new AreaSelection();
-		area.addSubRegionBox(new Box(BlockPos.ZERO, new BlockPos(20, 11, 0), "wall"), false);
+		area.addSubRegionBox(new Box(BlockPos.ZERO, new BlockPos(20, 11, 1), "wall"), false);
 		LitematicaSchematic schematic = LitematicaSchematic.createEmptySchematic(area, "litematicapass");
 		LitematicaBlockStateContainer container = schematic.getSubRegionContainer("wall");
 		BlockState[] rows = { Blocks.STONE.defaultBlockState(), Blocks.GLASS.defaultBlockState(), Blocks.GOLD_BLOCK.defaultBlockState(),
 			Blocks.OAK_PLANKS.defaultBlockState() };
 		for (int y = 0; y < 12; y++) {
 			for (int x = 0; x < 21; x++) {
-				container.set(x, y, 0, rows[y % 4]);
+				container.set(x, y, 1, rows[y % 4]);
 			}
+		}
+		for (int x = 0; x < 21; x++) {
+			container.set(x, 5, 0, Blocks.CHEST.defaultBlockState());
 		}
 		BlockPos origin = mc.player.blockPosition().offset(-10, -6, 3);
 		SchematicPlacement placement = SchematicPlacement.createFor(schematic, origin, "litematicapass smoke", true, true);

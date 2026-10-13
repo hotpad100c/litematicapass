@@ -15,6 +15,7 @@ stonecutter parameters {
     replacements {
         string(current.version in legacyIris || current.version in fixedFunctionIris) {
             replace("net.irisshaders.iris.vertices.ImmediateState", "net.coderbot.iris.vertices.ImmediateState")
+            replace("net.irisshaders.iris.pipeline.WorldRenderingPhase", "net.coderbot.iris.pipeline.WorldRenderingPhase")
             replace("import net.irisshaders.iris.Iris;", "import net.coderbot.iris.Iris;")
         }
         string(current.version in legacyIris) {
