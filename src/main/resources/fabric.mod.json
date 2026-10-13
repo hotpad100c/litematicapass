@@ -23,7 +23,7 @@
 		"litematicapass.mixins.json"
 	],
 	"depends": {
-		"fabricloader": ">=0.19.5",
+		"fabricloader": "*",
 		"minecraft": "${minecraft}",
 		"java": ">=${java}",
 		"fabric-api": "*",
