@@ -99,9 +99,27 @@ public final class SchematicTarget {
 		}
 	}
 
+	/**
+	 * Draws the entities and block entities submitted after the terrain (see SchematicEntities.pendingAtEndOfFrame), if
+	 * there are any: before the schematic overlay, whose boxes would hide them, or else at the end of the frame.
+	 */
+	public static void drawPendingEntities() {
+		if (!SchematicEntities.pendingAtEndOfFrame()) {
+			return;
+		}
+		boolean saved = IrisCompat.bypass();
+		IrisCompat.setBypass(true);
+		try {
+			SchematicEntities.drawPending(prepareForDraw());
+		} finally {
+			IrisCompat.setBypass(saved);
+		}
+	}
+
 	/** Merge the independent target onto the main one and reset the per-frame state. */
 	public static void compositeAndReset() {
 		try {
+			drawPendingEntities();
 			if (DebugView.mode() != DebugView.Mode.OFF && isActive()) {
 				showDebugView();
 			} else if (target != null && usedThisFrame) {

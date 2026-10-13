@@ -25,12 +25,37 @@ public final class SchematicEntities {
 	private static SubmitNodeStorage storage;
 	private static RenderBuffers buffers;
 	private static FeatureRenderDispatcher dispatcher;
+	private static boolean submitted;
+
 	public static SubmitNodeCollector route(SubmitNodeCollector original) {
-		return SchematicTarget.isActive() ? storage() : original;
+		return SchematicTarget.isActive() ? submitTo() : original;
 	}
 
 	public static SubmitNodeStorage route(SubmitNodeStorage original) {
-		return SchematicTarget.isActive() ? storage() : original;
+		return SchematicTarget.isActive() ? submitTo() : original;
+	}
+
+	private static SubmitNodeStorage submitTo() {
+		submitted = true;
+		return storage();
+	}
+
+	/**
+	 * Whether there are entities to draw at the end of the frame: before 26.3 Litematica submits them during the
+	 * level's entity phase, after its terrain was drawn (26.3 draws them with the opaque terrain).
+	 */
+	static boolean pendingAtEndOfFrame() {
+		//? if >=26.3 {
+		return false;
+		//?} else {
+		/*return submitted;
+		*///?}
+	}
+
+	/** Draws what was submitted since the last time (see {@link #pendingAtEndOfFrame}). */
+	static void drawPending(RenderTarget target) {
+		submitted = false;
+		draw(target);
 	}
 
 	private static SubmitNodeStorage storage() {
@@ -75,8 +100,16 @@ public final class SchematicEntities {
 			return;
 		}
 
+		// The vertices are written here. 26.3's Iris widens the vertex formats while the level renders, but keeps the
+		// vanilla pipelines we draw with on the vanilla formats: keep it out. 26.2's Iris hands out its widened entity
+		// formats as the vanilla ones (as for the terrain), so the vertices must be widened to match (else they come
+		// out as stretched triangles), whenever in the frame this runs.
 		boolean renderingLevel = IrisCompat.isRenderingLevel();
+		//? if >=26.3 {
 		IrisCompat.setRenderingLevel(false);
+		//?} else {
+		/*IrisCompat.setRenderingLevel(true);
+		*///?}
 		FeatureRenderDispatcher.PreparedFrame frame;
 		try {
 			frame = dispatcher().prepareFrame(submitted);
@@ -153,6 +186,7 @@ public final class SchematicEntities {
 	*///?}
 
 	static void endFrame() {
+		submitted = false;
 		//? if >=26.2 {
 		storage = null;
 		//?} else {
@@ -202,10 +236,11 @@ public final class SchematicEntities {
 			RenderTarget target = SchematicTarget.prepareForDraw();
 			// Iris widens the vertex formats while the vertices are written, so keep it out.
 			IrisCompat.setRenderingLevel(false);
-			render.accept(source);
-			// The batches reach the output target when they end; point that output at our target.
+			// The batches reach the output target when they end, and Litematica ends some itself while it draws; point
+			// that output at our target for all of it.
 			Runnable restore = Gpu.redirectOutput(target);
 			try {
+				render.accept(source);
 				source.endBatch();
 			} finally {
 				restore.run();
@@ -214,6 +249,14 @@ public final class SchematicEntities {
 			IrisCompat.setRenderingLevel(renderingLevel);
 			SchematicTarget.end();
 		}
+	}
+
+	// The entities are flushed in drawInto, nothing is left for the end of the frame.
+	static boolean pendingAtEndOfFrame() {
+		return false;
+	}
+
+	static void drawPending(RenderTarget target) {
 	}
 
 	// The entities were already flushed in drawInto.

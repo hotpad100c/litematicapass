@@ -51,11 +51,8 @@ public class LitematicaRendererMixin {
 	private void litematicapass$routeTerrain(ChunkSectionLayerGroup group, @Nullable GpuSampler sampler, Operation<Void> original) {
 		SchematicTarget.begin();
 		try {
+			// The entities and block entities are submitted later in the frame and drawn at its end (see SchematicTarget).
 			original.call(group, sampler);
-			// The entities and block entities go into the same target, after the opaque terrain.
-			if (SchematicTarget.isRouting() && group == ChunkSectionLayerGroup.OPAQUE) {
-				SchematicEntities.draw(SchematicTarget.prepareForDraw());
-			}
 		} finally {
 			SchematicTarget.end();
 		}
@@ -66,11 +63,9 @@ public class LitematicaRendererMixin {
 	private void litematicapass$routeTerrain(ChunkSectionLayerGroup group, Operation<Void> original) {
 		SchematicTarget.begin();
 		try {
+			// From 1.21.9 the entities and block entities are submitted later in the frame and drawn at its end (see
+			// SchematicTarget); before, they are drawn by themselves (see below).
 			original.call(group);
-			// The entities and block entities go into the same target, after the opaque terrain.
-			if (SchematicTarget.isRouting() && group == ChunkSectionLayerGroup.OPAQUE) {
-				SchematicEntities.draw(SchematicTarget.prepareForDraw());
-			}
 		} finally {
 			SchematicTarget.end();
 		}
@@ -128,6 +123,10 @@ public class LitematicaRendererMixin {
 	@Inject(method = "piecewiseRenderOverlay", at = @At("HEAD"))
 	private void litematicapass$beginOverlay(CallbackInfo ci) {
 		SchematicTarget.begin();
+		// Before the overlay boxes, which would hide the entities submitted after the terrain.
+		if (SchematicTarget.isRouting()) {
+			SchematicTarget.drawPendingEntities();
+		}
 	}
 
 	@Inject(method = "piecewiseRenderOverlay", at = @At("RETURN"))
