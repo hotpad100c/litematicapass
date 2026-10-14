@@ -10,7 +10,7 @@ Verified to work from 26.3 to 1.16.5 in version 1.1.0.
 
 * The mod redirects Litematica's rendering to a dedicated RenderTarget and merges it based on depth after Iris finishes shading. This prevents Litematica's rendering results from being influenced by shaders.
 * For translucency handling, it derives a depth map containing only translucent faces from Iris's depth map, then darkens any parts occluded by translucent surfaces by 50% to simulate a translucent occlusion effect, achieving the desired functionality while maintaining visual appeal !
-* The diagram above was made before running into problem with player hand. To address this: similar to the translucency handling above, the depth map before rendering the hand is captured and compared to identify the area occupied by the arm. The corresponding part of the Litematica output is then discarded, ensuring that the player's hand always appears on top.
+* The diagram below was made before running into problem with player hand. To address this: similar to the translucency handling above, the depth map before rendering the hand is captured and compared to identify the area occupied by the arm. The corresponding part of the Litematica output is then discarded, ensuring that the player's hand always appears on top.
 
 ![Pass.png](docs/Pass.png)
 
