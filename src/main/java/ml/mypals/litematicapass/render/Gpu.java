@@ -92,6 +92,9 @@ final class Gpu {
 		return ((MinecraftAccessor) Minecraft.getInstance()).litematicapass$mainRenderTarget();
 		*///?}
 	}
+	/** 为真时，通道覆盖整个输出而不是场景区域（见 {@link SceneSize#mergeStretched}）。 */
+	static boolean wholeOutput;
+
 	static int sceneWidth() {
 		return SceneSize.width();
 	}
@@ -591,9 +594,6 @@ final class Gpu {
 	public int[] sceneSize(){
 		return new int[]{Minecraft.getInstance().getWindow().getWidth(), Minecraft.getInstance().getWindow().getHeight()};
 	};
-
-	/** 为真时，通道覆盖整个输出而不是场景区域（见 {@link SceneSize#mergeStretched}）。 */
-	static boolean wholeOutput;
 
 	private static RenderPass openPass(String label, @Nullable GpuTextureView color, @Nullable GpuTextureView depth, RenderTarget size) {
 		//? if >=26.3 {
