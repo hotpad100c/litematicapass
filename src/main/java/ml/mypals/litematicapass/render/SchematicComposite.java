@@ -12,12 +12,20 @@ import java.util.Map;
  */
 final class SchematicComposite {
 	private static Gpu.Pipeline pipeline;
+	private static Gpu.Pipeline stretchedPipeline;
 
 	private SchematicComposite() {}
 
 	static void draw(RenderTarget main, RenderTarget schematic) {
+		// 使用Super Resolution时，litematica输出只有场景渲染时大小，而主颜色可能已经被放大到整个窗口。
+		// 着色器中将自行配合缩放。
+		boolean stretched = SceneSize.mergeStretched();
 		if (pipeline == null) {
 			pipeline = Gpu.colorPipeline("pipeline/schematic_composite", "core/schematic_composite", true, Map.of(),
+				"SchematicColor", "SchematicDepth", "MainDepth", "OpaqueDepth", "NoHandDepth");
+		}
+		if (stretched && stretchedPipeline == null) {
+			stretchedPipeline = Gpu.colorPipeline("pipeline/schematic_composite_stretched", "core/schematic_composite", true, Map.of("STRETCHED", 1),
 				"SchematicColor", "SchematicDepth", "MainDepth", "OpaqueDepth", "NoHandDepth");
 		}
 		RenderTarget opaque = SceneDepth.opaque();
@@ -28,11 +36,16 @@ final class SchematicComposite {
 		if (noHand == null) {
 			noHand = opaque;
 		}
-		Gpu.draw(pipeline, main,
-			Gpu.color("SchematicColor", schematic),
-			Gpu.depth("SchematicDepth", schematic),
-			Gpu.depth("MainDepth", main),
-			Gpu.depth("OpaqueDepth", opaque),
-			Gpu.depth("NoHandDepth", noHand));
+		Gpu.wholeOutput = stretched;
+		try {
+			Gpu.draw(stretched ? stretchedPipeline : pipeline, main,
+				Gpu.color("SchematicColor", schematic),
+				Gpu.depth("SchematicDepth", schematic),
+				Gpu.depth("MainDepth", main),
+				Gpu.depth("OpaqueDepth", opaque),
+				Gpu.depth("NoHandDepth", noHand));
+		} finally {
+			Gpu.wholeOutput = false;
+		}
 	}
 }

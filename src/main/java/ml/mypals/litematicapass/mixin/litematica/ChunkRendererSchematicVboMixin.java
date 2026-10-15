@@ -1,5 +1,6 @@
 package ml.mypals.litematicapass.mixin.litematica;
 
+import org.spongepowered.asm.mixin.Unique;
 import com.llamalad7.mixinextras.injector.wrapmethod.WrapMethod;
 import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 import fi.dy.masa.litematica.render.schematic.ChunkRenderTaskSchematic;
@@ -41,7 +42,8 @@ public class ChunkRendererSchematicVboMixin {
 	}
 	*///?}
 
-	private static void plainFormat(Runnable build) {
+	@Unique
+    private static void plainFormat(Runnable build) {
 		boolean previous = IrisCompat.skipExtension();
 		IrisCompat.setSkipExtension(true);
 		try {

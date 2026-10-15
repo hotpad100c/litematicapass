@@ -5,6 +5,8 @@ import com.mojang.blaze3d.pipeline.TextureTarget;
 import fi.dy.masa.litematica.config.Configs;
 import org.jspecify.annotations.Nullable;
 
+import java.awt.*;
+
 /**
  * Our own copies of the scene depth at two moments of the shader pack's frame, taken from the main depth (which the
  * pack shares): just before the first-person hand is drawn, and just before translucent surfaces are drawn (after
@@ -42,8 +44,9 @@ public final class SceneDepth {
 
 	private static TextureTarget copy(@Nullable TextureTarget target, String label) {
 		RenderTarget main = Gpu.mainTarget();
-		int width = Math.max(1, main.width);
-		int height = Math.max(1, main.height);
+		int width = Gpu.sceneWidth();
+		int height = Gpu.sceneHeight();
+
 		if (target == null) {
 			target = Gpu.depthTarget(label, width, height);
 		} else if (target.width != width || target.height != height) {

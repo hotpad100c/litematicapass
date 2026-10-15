@@ -4,6 +4,7 @@ import com.mojang.blaze3d.pipeline.RenderTarget;
 import com.mojang.blaze3d.pipeline.TextureTarget;
 import ml.mypals.litematicapass.LitematicaPass;
 import net.minecraft.client.Minecraft;
+import org.joml.Vector2i;
 import org.jspecify.annotations.Nullable;
 
 import java.util.Map;
@@ -90,6 +91,12 @@ final class Gpu {
 		/*// Before 1.21.6 routing redirects getMainRenderTarget() (see MinecraftMixin); read the field itself.
 		return ((MinecraftAccessor) Minecraft.getInstance()).litematicapass$mainRenderTarget();
 		*///?}
+	}
+	static int sceneWidth() {
+		return SceneSize.width();
+	}
+	static int sceneHeight() {
+		return SceneSize.height();
 	}
 
 	/** A colour + depth target. */
@@ -519,7 +526,8 @@ final class Gpu {
 		}
 
 		GlStateManager._glBindFramebuffer(GL30.GL_FRAMEBUFFER, output.frameBufferId);
-		GlStateManager._viewport(0, 0, output.width, output.height);
+		// The scene area, not the whole output: the main target is larger than the scene with a resolution-scaling mod.
+		GlStateManager._viewport(0, 0, wholeOutput ? output.width : sceneWidth(), wholeOutput ? output.height : sceneHeight());
 		if (pipeline.depthOnly) {
 			GlStateManager._colorMask(false, false, false, false);
 			GlStateManager._depthMask(true);
@@ -580,6 +588,12 @@ final class Gpu {
 	private static GpuTextureView depth(RenderTarget target) {
 		return target.getDepthTextureView();
 	}
+	public int[] sceneSize(){
+		return new int[]{Minecraft.getInstance().getWindow().getWidth(), Minecraft.getInstance().getWindow().getHeight()};
+	};
+
+	/** 为真时，通道覆盖整个输出而不是场景区域（见 {@link SceneSize#mergeStretched}）。 */
+	static boolean wholeOutput;
 
 	private static RenderPass openPass(String label, @Nullable GpuTextureView color, @Nullable GpuTextureView depth, RenderTarget size) {
 		//? if >=26.3 {
@@ -594,7 +608,10 @@ final class Gpu {
 		if (depth != null) {
 			descriptor.withDepthAttachment(depth, OptionalDouble.empty());
 		}
-		descriptor.withRenderArea(new RenderPass.RenderArea(0, 0, size.width, size.height));
+		descriptor.withRenderArea(wholeOutput
+			? new RenderPass.RenderArea(0, 0, size.width, size.height)
+			: new RenderPass.RenderArea(0, 0, sceneWidth(), sceneHeight()));
+
 		//?}
 		//? if >=26.3 {
 		return RenderSystem.getDevice().createCommandEncoder().createRenderPass(descriptor.build());

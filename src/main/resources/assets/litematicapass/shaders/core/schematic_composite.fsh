@@ -24,7 +24,13 @@ float closeness(float depth) { return depth; }
 #endif
 
 void main() {
+#ifdef STRETCHED
+    vec2 renderSize = vec2(textureSize(SchematicColor, 0));
+    vec2 outputSize = vec2(textureSize(MainDepth, 0));
+    ivec2 pixelCoords = min(ivec2(gl_FragCoord.xy * renderSize / outputSize), ivec2(renderSize) - 1);
+#else
     ivec2 pixelCoords = ivec2(gl_FragCoord.xy);
+#endif
     vec4 color = texelFetch(SchematicColor, pixelCoords, 0);
     if (color.a <= 0.0) {
         discard;

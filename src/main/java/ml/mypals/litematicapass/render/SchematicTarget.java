@@ -89,9 +89,8 @@ public final class SchematicTarget {
 	}
 
 	private static void ensureTarget() {
-		RenderTarget main = Gpu.mainTarget();
-		int width = Math.max(1, main.width);
-		int height = Math.max(1, main.height);
+		int width = Gpu.sceneWidth();
+		int height = Gpu.sceneHeight();
 		if (target == null) {
 			target = Gpu.colorDepthTarget("litematicapass_schematic", width, height);
 		} else if (target.width != width || target.height != height) {
