@@ -27,6 +27,11 @@ public final class IrisCompat {
 		}
 	}
 
+	/** Whether the schematic's chunk meshes must be built in Iris' widened terrain format. */
+	public static boolean schematicMeshesWidened() {
+		return LOADED && IrisHooks.schematicMeshesWidened();
+	}
+
 	/** Iris only widens vertex formats while the level is being rendered. */
 	public static boolean isRenderingLevel() {
 		return LOADED && IrisHooks.isRenderingLevel();

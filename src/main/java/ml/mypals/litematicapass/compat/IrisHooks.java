@@ -52,6 +52,20 @@ final class IrisHooks {
 	}
 	*///?}
 
+	/**
+	 * Whether the schematic's chunk meshes must be built in Iris' widened terrain format. 26.3 and newer have the
+	 * extension switch above and use it to keep the meshes on the vanilla format. Iris for 26.2 widens every terrain
+	 * binding while the level renders, with nothing to opt out of it, so the meshes have to be widened to match; the
+	 * Iris versions of the other Minecraft versions were not checked and keep whatever they did before.
+	 */
+	static boolean schematicMeshesWidened() {
+		//? if >=26.2 && <26.3 {
+		/*return true;
+		*///?} else {
+		return false;
+		//?}
+	}
+
 	//? if >=26.2 {
 	private static Boolean packUsesReversedDepth;
 
