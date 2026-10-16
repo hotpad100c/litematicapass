@@ -1,0 +1,30 @@
+package ml.mypals.litematicapass.mixin.litematica;
+
+import com.llamalad7.mixinextras.injector.ModifyExpressionValue;
+import litematica.render.RenderUtils;
+import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.injection.At;
+
+/**
+ * Litematica 为"缺失"方块画基于模型的覆盖面和轮廓时，按原版的每顶点 7 个 int（28 字节）读取 BakedQuad 的顶点位置。
+ * 有 OptiFine 光影时烘焙模型的顶点是 14 个 int（多出法线等光影数据），只有第一个顶点读对，覆盖面塌成大约半个三角形。
+ * 这里把顶点数据按 7 个 int 一个顶点重新排好再交给 Litematica。与重定向无关，是 Litematica 在 OptiFine 光影下的问题。
+ */
+@Mixin(value = RenderUtils.class, remap = false)
+public class RenderUtilsMixin {
+	private static final int VANILLA_INTS = 7;
+
+	@ModifyExpressionValue(method = { "renderModelQuadOverlayBatched", "renderModelQuadOutlines" }, at = @At(value = "INVOKE",
+		target = "Lnet/minecraft/client/renderer/block/model/BakedQuad;getVertexData()[I", remap = true))
+	private static int[] litematicapass$vanillaVertexLayout(int[] vertexData) {
+		int stride = vertexData.length / 4;
+		if (stride <= VANILLA_INTS) {
+			return vertexData;
+		}
+		int[] compact = new int[4 * VANILLA_INTS];
+		for (int vertex = 0; vertex < 4; vertex++) {
+			System.arraycopy(vertexData, vertex * stride, compact, vertex * VANILLA_INTS, VANILLA_INTS);
+		}
+		return compact;
+	}
+}

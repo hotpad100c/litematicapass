@@ -10,6 +10,7 @@
     "litematica.LitematicaRendererMixin",
     "litematica.RenderGlobalSchematicMixin",
     "litematica.RenderHandlerMixin",
+    "litematica.RenderUtilsMixin",
     "litematica.VboRenderListSchematicMixin"
   ],
   "injectors": {
