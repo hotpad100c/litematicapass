@@ -113,6 +113,7 @@ public final class SchematicTarget {
 			preparedThisFrame = false;
 			usedThisFrame = false;
 			SceneDepth.endFrame();
+			DeferredSchematic.endFrame();
 		}
 	}
 }

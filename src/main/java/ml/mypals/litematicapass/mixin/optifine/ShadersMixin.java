@@ -1,6 +1,7 @@
 package ml.mypals.litematicapass.mixin.optifine;
 
 import ml.mypals.litematicapass.compat.OptiFineCompat;
+import ml.mypals.litematicapass.render.DeferredSchematic;
 import ml.mypals.litematicapass.render.SceneDepth;
 import ml.mypals.litematicapass.render.SchematicTarget;
 import org.spongepowered.asm.mixin.Mixin;
@@ -19,10 +20,12 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 @Pseudo
 @Mixin(targets = "net.optifine.shaders.Shaders", remap = false)
 public class ShadersMixin {
-	// OptiFine copies its depthtex1 here, from its framebuffer, which is still bound.
+	// OptiFine copies its depthtex1 here, from its framebuffer, which is still bound. The opaque scene is complete:
+	// draw the schematic's solid, cutout and entities, held back until now (DeferredSchematic).
 	@Inject(method = "preWater", at = @At("HEAD"), require = 0)
 	private static void litematicapass$captureBeforeTranslucents(CallbackInfo ci) {
 		SceneDepth.captureBeforeTranslucents();
+		DeferredSchematic.replay();
 	}
 
 	@Inject(method = "renderCompositeFinal", at = @At("HEAD"), require = 0)
