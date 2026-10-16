@@ -9,9 +9,9 @@ import org.spongepowered.asm.mixin.injection.ModifyVariable;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 /**
- * Litematica 的半透明 schematic 和覆盖层用 (SRC_ALPHA, ONE_MINUS_SRC_ALPHA, ONE, ZERO) 绘制，其 alpha 因子 (ONE, ZERO)
- * 会把我们目标里已有的 alpha 换成覆盖层自己的 alpha（约 0.5），合并时背景就透了出来（画面过亮）。重定向期间把 alpha
- * 因子换成 (ONE, ONE_MINUS_SRC_ALPHA)，让 alpha 像覆盖率一样累积；颜色因子不变。
+ * Fixes Litematica’s translucent overlay compositing by accumulating alpha during framebuffer
+ * redirection instead of overwriting the target alpha, preventing the background from bleeding
+ * through during compositing.
  */
 @Mixin(GlStateManager.class)
 public class GlStateManagerMixin {

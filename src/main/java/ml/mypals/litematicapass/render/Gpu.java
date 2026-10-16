@@ -22,17 +22,12 @@ import java.util.Collections;
 import java.util.Map;
 
 /**
- * The GPU work of the mod, in plain OpenGL (Minecraft 1.12 has no render pipeline API): our own textures and
- * framebuffers, copies of the depth of the bound framebuffer, and full-screen passes ({@link #colorPipeline} /
- * {@link #depthPipeline} drawn with {@link #draw}). Every call restores the GL state it touches exactly, so
- * GlStateManager's caches stay true.
- *
- * <p>Unlike the newer versions, the textures involved need not have one size: with a shader pack OptiFine renders the
- * world at its own resolution (its render quality setting), so a pass samples each texture at the position matching
- * the pixel it writes.
+ * Implements the mod’s OpenGL rendering pipeline with custom textures, framebuffers, depth copies,
+ * and fullscreen passes while preserving Minecraft’s GL state and supporting different texture
+ * resolutions under OptiFine shaders.
  */
 final class Gpu {
-	/** The depth a cleared depth buffer holds (1.12: near = 0, far = 1; the shaders define STANDARD_DEPTH). */
+	/** The depth a cleared depth buffer holds (near = 0, far = 1; the shaders define STANDARD_DEPTH). */
 	static final double FAR_DEPTH = 1.0;
 
 	private static final IntBuffer VIEWPORT = BufferUtils.createIntBuffer(16);

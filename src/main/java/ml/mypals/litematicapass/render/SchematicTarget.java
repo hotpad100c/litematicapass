@@ -4,10 +4,9 @@ import ml.mypals.litematicapass.LitematicaPass;
 import ml.mypals.litematicapass.compat.OptiFineCompat;
 
 /**
- * 一个独立的 颜色+深度 渲染目标，在激活光影包（OptiFine）时，schematic 的绘制会被重定向到这里。
- * 其深度从光影包的场景深度初始化，因此世界仍然会遮挡 schematic；
- * 在 OptiFine 的合成（composite/final）结束后，渲染结果会被深度合并到 Minecraft 的帧缓冲上（{@link SchematicComposite}）。
- * 尺寸跟随 OptiFine 的场景深度（它按自己的渲染分辨率绘制世界）。
+ * Provides a dedicated color-and-depth render target for Litematica schematics under OptiFine shaders,
+ * initialized from the shader scene depth and composited back into Minecraft’s framebuffer after
+ * the shader’s composite/final passes.
  */
 public final class SchematicTarget {
 	private static final Gpu.Target TARGET = new Gpu.Target();

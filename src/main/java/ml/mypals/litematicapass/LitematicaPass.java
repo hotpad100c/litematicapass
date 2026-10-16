@@ -20,11 +20,7 @@ public final class LitematicaPass {
 
 	private LitematicaPass() {}
 
-	/**
-	 * {@code /litematicapass debug [view]}: show the buffers of the schematic pipeline instead of the frame. 1.12 has no
-	 * client command API (Ornithe's standard libraries have none either), so the chat message is intercepted
-	 * (EntityPlayerSPMixin); returns whether it was this command.
-	 */
+
 	public static boolean handleCommand(String message) {
 		String[] words = message.trim().split("\\s+");
 		if (!words[0].equalsIgnoreCase(COMMAND)) {

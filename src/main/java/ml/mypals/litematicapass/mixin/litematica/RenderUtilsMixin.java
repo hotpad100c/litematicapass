@@ -6,9 +6,9 @@ import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 
 /**
- * Litematica 为"缺失"方块画基于模型的覆盖面和轮廓时，按原版的每顶点 7 个 int（28 字节）读取 BakedQuad 的顶点位置。
- * 有 OptiFine 光影时烘焙模型的顶点是 14 个 int（多出法线等光影数据），只有第一个顶点读对，覆盖面塌成大约半个三角形。
- * 这里把顶点数据按 7 个 int 一个顶点重新排好再交给 Litematica。与重定向无关，是 Litematica 在 OptiFine 光影下的问题。
+ * Fixes Litematica’s missing-block overlay collapsing under OptiFine
+ * shaders by repacking shader-expanded BakedQuad vertex data into the vanilla
+ * 7-int-per-vertex format expected by Litematica.
  */
 @Mixin(value = RenderUtils.class, remap = false)
 public class RenderUtilsMixin {

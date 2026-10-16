@@ -7,7 +7,9 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
-/** {@code /litematicapass ...} is handled on the client and never sent to the server (see LitematicaPass.handleCommand). */
+/**
+ *  /litematicapass ... command is handled on the client and never sent to the server
+ */
 @Mixin(EntityPlayerSP.class)
 public class EntityPlayerSPMixin {
 	@Inject(method = "sendChatMessage(Ljava/lang/String;)V", at = @At("HEAD"), cancellable = true)

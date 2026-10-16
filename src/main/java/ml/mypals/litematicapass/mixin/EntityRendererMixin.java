@@ -8,8 +8,8 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 /**
- * 每帧状态的兜底收尾：正常情况下 ShadersMixin 在 OptiFine 的 renderCompositeFinal 之后合并并重置；
- * 若那个挂接点不存在（其它 OptiFine 版本），就在 renderWorldPass 的最后合并（此时手部覆盖层已经画上，可能被盖住）。
+ * Provides a per-frame fallback by compositing and resetting our framebuffer for Litematica after OptiFine’s
+ * final composite pass, or at the end of the world pass for incompatible OptiFine versions.
  */
 @Mixin(value = EntityRenderer.class, priority = 2000)
 public class EntityRendererMixin {

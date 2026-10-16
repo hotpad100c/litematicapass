@@ -4,8 +4,8 @@ import java.util.Map;
 import java.util.TreeMap;
 
 /**
- * Counts how often each step of the pipeline ran, for {@code /litematicapass debug status}: in a normal instance nothing
- * else shows whether a hook into OptiFine fired or why nothing was merged.
+ * Tracks pipeline execution counts for `/litematicapass debug status`,
+ * making it easier to diagnose OptiFine hook failures and missing framebuffer composites.
  */
 public final class Stats {
 	private static final Map<String, Long> COUNTS = new TreeMap<>();

@@ -5,15 +5,9 @@ import ml.mypals.litematicapass.LitematicaPass;
 import org.lwjgl.opengl.GL30;
 
 /**
- * Our own copies of the shader pack's scene depth at three moments of OptiFine's frame, taken from the depth of its
- * framebuffer ({@code dfb}) while it is bound: just before the first-person hand is drawn, just before translucent
- * surfaces are drawn (after the hand), and before the composite passes (everything). They are the equivalents of the
- * pack's {@code depthtex2}, {@code depthtex1} and {@code depthtex0}, without reaching into OptiFine's internals; see
- * {@code ShadersMixin} and {@code ShadersRenderMixin} for the capture points.
- *
- * <p>Unlike Iris, OptiFine never shares its scene depth with Minecraft's framebuffer, so the newer versions' "main
- * depth" is the third copy here, and the depth the schematic is seeded from is OptiFine's depth texture itself
- * ({@link #live}).
+ * Captures three copies of OptiFine’s shader scene depth at key rendering stages,
+ * providing Litematica with `depthtex2`, `depthtex1`, and `depthtex0` equivalents
+ * without accessing OptiFine’s internals.
  */
 public final class SceneDepth {
 	private static final Gpu.Texture NO_HAND = new Gpu.Texture(0, 0, 0);
