@@ -41,8 +41,9 @@ public final class SchematicTarget {
 			if (bypassApplied) {
 				bypassSaved = IrisCompat.bypass();
 				IrisCompat.setBypass(true);
-				// Litematica's chunk meshes are built in the plain BLOCK format (see ChunkRendererSchematicVboMixin);
-				// make sure Iris does not widen the vertex format the pipeline is bound with either.
+				// Litematica's chunk meshes are built in the format Iris binds for their pipelines (see
+				// ChunkRendererSchematicVboMixin): the vanilla one where Iris can be kept from widening, the widened
+				// one otherwise (26.2), where this does nothing.
 				skipExtensionSaved = IrisCompat.skipExtension();
 				IrisCompat.setSkipExtension(true);
 				// Before 1.21.5 draws go to whatever framebuffer is bound; bind ours for the routed section.

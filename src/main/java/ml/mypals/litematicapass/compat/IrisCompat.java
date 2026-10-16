@@ -27,6 +27,11 @@ public final class IrisCompat {
 		}
 	}
 
+	/** Whether the schematic's chunk meshes must be built in Iris' widened terrain format. */
+	public static boolean schematicMeshesWidened() {
+		return LOADED && IrisHooks.schematicMeshesWidened();
+	}
+
 	/** Iris only widens vertex formats while the level is being rendered. */
 	public static boolean isRenderingLevel() {
 		return LOADED && IrisHooks.isRenderingLevel();
@@ -36,5 +41,10 @@ public final class IrisCompat {
 		if (LOADED) {
 			IrisHooks.setRenderingLevel(renderingLevel);
 		}
+	}
+
+	/** Whether the world depth the pack writes is reversed Z (near = 1); the screen shaders must match it. */
+	public static boolean packUsesReversedDepth() {
+		return LOADED && IrisHooks.packUsesReversedDepth();
 	}
 }
