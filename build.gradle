@@ -11,6 +11,11 @@ base {
 
 repositories {
 	maven { name = 'Ornithe Releases'; url = 'https://maven.ornithemc.net/releases' }
+	// The JSON parser OSL's config module uses.
+	exclusiveContent {
+		forRepository { maven { name = 'Quilt'; url = 'https://maven.quiltmc.org/repository/release' } }
+		filter { includeGroup 'org.quiltmc.parsers' }
+	}
 	exclusiveContent {
 		forRepository { maven { name = 'Modrinth'; url = 'https://api.modrinth.com/maven' } }
 		filter { includeGroup 'maven.modrinth' }
@@ -24,12 +29,18 @@ dependencies {
 		addLayer ploceus.mcpMappings('stable', '1.12', '39')
 	}
 	modImplementation "net.fabricmc:fabric-loader:${project.fabric_loader_version}"
-	// What Litematica and MaLiLib need of Ornithe's standard libraries (the module versions of OSL 0.11.3, which they
-	// are built with). ploceus.dependOsl no longer resolves these gen1 modules, so they are named here.
+	// All of Ornithe's standard libraries, as OSL 0.11.3 (which Litematica and MaLiLib are built with) bundles them, so
+	// the development client runs other Ornithe mods too (Mod Menu needs keybinds). ploceus.dependOsl no longer
+	// resolves these gen1 modules, so they are named here. Branding 0.2.3 has no 1.12.2 build, and the entrypoint of
+	// 0.3.0 names a class it lacks.
 	for (module in [
+		'branding:0.3.2+mc16w05b-mc1.12.2',
+		'config:0.4.2+mc15w40a-mc1.12.2',
 		'core:0.5.0',
 		'entrypoints:0.4.2+mc13w16a-04192037-mc1.14.4',
+		'keybinds:0.1.2+mc17w16a-mc1.12.2',
 		'lifecycle-events:0.5.2+mc13w36a-09051446-mc1.13',
+		'networking:0.6.4+mc14w31a-mc1.13-pre2',
 		'resource-loader:0.2.8+mc13w26a-mc1.12.2'
 	]) {
 		modLocalRuntime "net.ornithemc.osl:${module}"
@@ -69,6 +80,11 @@ loom {
 		client {
 			// Logs every class a mixin is applied to, so a dev run shows ours applied.
 			vmArg '-Dmixin.debug.verbose=true'
+			// Legacy OptiFabric (with OptiFine, in run/mods) builds OptiFine's classes against vanilla Minecraft, and does
+			// not find the vanilla jar where this Loom keeps it. Even so OptiFine does not fully work here: OptiFabric
+			// leaves the inherited methods of the classes OptiFine patches unrenamed in development (IntegratedServer's
+			// tick stays C), and Litematica's mixin into it fails. Test with OptiFine in a real Ornithe instance.
+			vmArg "-Doptifabric.mc-jar=${gradle.gradleUserHomeDir}/caches/fabric-loom/${project.minecraft_version}/minecraft-client.jar"
 		}
 	}
 }

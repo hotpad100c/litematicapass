@@ -12,10 +12,12 @@
 | Fabric Loader | ≥ 0.15（构建用 0.15.3） | |
 | Litematica | litematica-ornithe-1.12.2-0.40.1 | Modrinth 版本 `iqj6EsbG` |
 | MaLiLib | malilib-ornithe-1.12.2-0.60.2 | Modrinth 版本 `c5hvGuGn` |
-| OSL | core 0.5.0、entrypoints 0.4.2、lifecycle-events 0.5.2、resource-loader 0.2.8（即 OSL 0.11.3 的模块） | Litematica / MaLiLib 需要；玩家也要安装 |
+| OSL | OSL 0.11.3 的全部模块：branding 0.3.2、config 0.4.2、core 0.5.0、entrypoints 0.4.2、keybinds 0.1.2、lifecycle-events 0.5.2、networking 0.6.4、resource-loader 0.2.8 | Litematica / MaLiLib 需要 entrypoints 与 resource-loader，Mod Menu 需要 keybinds；玩家也要安装。branding 用 0.3.2：0.2.3 没有 1.12.2 版本，0.3.0 的入口类不存在 |
 | OptiFine | OptiFine 1.12.2 HD U G5 + Legacy OptiFabric 2.2.0+1.8-1.12.2-ornithe | 可选；没有光影包时本模组什么都不做 |
 
-构建：`./gradlew build`（产物在 `build/libs/`）。开发客户端：`./gradlew runClient`（不含 OptiFine，见下文）。
+构建：`./gradlew build`（产物在 `build/libs/`）。开发客户端：`./gradlew runClient`。同一时间只运行一个客户端：它们共用 `run/`，Fabric Loader 在 `run/.fabric/tmp` 重映射 `run/mods` 里的模组，两个实例同时启动会报 `ClosedFileSystemException`。
+
+**OptiFine 在开发环境中不能完整运行。** 把 Legacy OptiFabric 和 OptiFine 放进 `run/mods` 后，OptiFabric 能找到原版 jar（`build.gradle` 传了 `-Doptifabric.mc-jar`）并加载 OptiFine，但它在开发环境里重映射 OptiFine 补丁过的类时，不会重命名继承来的方法（例如 `IntegratedServer` 的 `tick` 仍叫 `C`），于是 Litematica 的 `MixinIntegratedServer` 找不到目标而崩溃。这是 OptiFabric 的开发环境问题（它的 README 也说不支持开发环境），正式实例中不会出现。要测光影，请用真实的 Ornithe 1.12.2 实例。
 
 ## 在 OptiFine 光影下挂接的位置
 
@@ -46,7 +48,9 @@ Litematica 的所有绘制都在第 10 步之前，所以核心思路不变：
 | 半透明遮挡变暗 50% | 合并通道 | 与 1.16.5 相同：最终深度比半透明之前的深度更近处就是半透明表面；schematic 在其后方时颜色 × 0.5 |
 | 手部遮挡 | 种子 + 合并通道 | 与 1.16.5 相同：手部前后深度不同处丢弃 schematic |
 
-OptiFine 不是编译依赖：mixin 用字符串指定 `net.optifine.shaders.Shaders` / `ShadersRender`（`@Pseudo`、`remap = false`、`require = 0`），其余通过反射（`OptiFineCompat`）读取公开的静态字段 `shaderPackLoaded`、`isShadowPass`、`activeProgram`、`ProgramNone` 和方法 `useProgram(Program)`。只有装了 `optifabric` 时才应用这些 mixin。
+OptiFine 不是编译依赖：mixin 用字符串指定 `net.optifine.shaders.Shaders` / `ShadersRender`（`@Pseudo`、`remap = false`、`require = 0`），其余通过反射（`OptiFineCompat`）读取公开的静态字段 `shaderPackLoaded`、`isShadowPass`、`activeProgram`、`ProgramNone` 和方法 `useProgram(Program)`。
+
+这些 mixin 在单独的配置 `litematicapass.optifine.mixins.json` 里，由 `mm:early_risers` 入口（`OptiFineMixins`）在装了 `optifabric` 时注册。原因：OptiFabric 在它自己的 early riser 里才把 OptiFine 加到类路径上，晚于 fabric.mod.json 里列出的 mixin 配置的准备阶段；Mixin 在那时找不到 `@Pseudo` 目标就会直接丢掉它（日志里的 "Skipping virtual target"）。之后注册的配置会在 OptiFine 已在类路径上时才准备（OptiFabric 注册它自己的 OptiFine mixin 也是这样做的）。
 
 与新版本的不同之处：
 
@@ -68,14 +72,14 @@ OptiFine 不是编译依赖：mixin 用字符串指定 `net.optifine.shaders.Sha
 已验证：
 
 - 分支在 Ornithe 1.12.2（gen1 + MCP 名称）下 `./gradlew build` 通过，产物的 refmap 中间名与 Litematica 自己的 refmap 一致（例如 `EntityRenderer.renderWorldPass` = `C_0259655.m_0906956`）。
-- 开发客户端（无 OptiFine）能启动并进入世界：`EntityPlayerSPMixin`、`GlStateManagerMixin`、`EntityRendererMixin`、`litematica.RenderHandlerMixin`、`litematica.LitematicaRendererMixin` 都已应用，没有错误。没有光影包时不重定向，画面与不装本模组相同。
+- 开发客户端（无 OptiFine，只带四个 OSL 模块时）能启动并进入世界：`EntityPlayerSPMixin`、`GlStateManagerMixin`、`EntityRendererMixin`、`litematica.RenderHandlerMixin`、`litematica.LitematicaRendererMixin` 都已应用，没有错误。没有光影包时不重定向，画面与不装本模组相同。
 - OptiFine 1.12.2 HD U G5 中挂接点的存在、签名和调用顺序（对 OptiFine 补丁后的 `EntityRenderer` 与 `Shaders` / `ShadersRender` 用 javap 核对）。
 
 未验证（需要在真实的 Ornithe 1.12.2 实例中测试：Legacy OptiFabric 不能在开发环境中运行）：
 
-- `ShadersMixin` / `ShadersRenderMixin` 能否应用到 Legacy OptiFabric 加载的 OptiFine 类上。
+- `ShadersMixin` / `ShadersRenderMixin` 能否应用到 Legacy OptiFabric 加载的 OptiFine 类上。第一版把它们放在主配置里，开发环境日志显示它们被丢掉（"Skipping virtual target"）；改为由 early riser 注册后已能构建，但还没有在 OptiFine 加载 `Shaders` 之后确认过 "Mixing optifine.ShadersMixin"。
 - 开启光影包后的实际画面：重定向、深度种子、合并、半透明变暗、手部遮挡、调试视图。
 - OptiFine 的 `checkGLError` 在重定向期间是否报错（例如 OptiFine 在实体渲染里设置 uniform 时）。
 - 其它 OptiFine 1.12.2 版本（G5 以外）。
 
-测试步骤：Ornithe 1.12.2 实例的 mods 文件夹放入本模组、Litematica 0.40.1、MaLiLib 0.60.2、上面的四个 OSL 模块、Legacy OptiFabric 2.2.0 和 OptiFine 1.12.2 HD U G5；选一个光影包，加载一个 schematic，用 `/litematicapass debug color`、`scene_depth`、`main_depth`、`translucent_depth` 逐个检查缓冲区，再 `/litematicapass debug off` 看合并结果（水后的 schematic 应变暗，手部应在 schematic 上方）。
+测试步骤：Ornithe 1.12.2 实例的 mods 文件夹放入本模组、Litematica 0.40.1、MaLiLib 0.60.2、上面的 OSL 模块、Legacy OptiFabric（2.2.0+1.8-1.12.2-ornithe，或覆盖 1.12.2 的较新的 2.3.6+b1.7.3-1.14.4）和 OptiFine 1.12.2 HD U G5；选一个光影包，加载一个 schematic，用 `/litematicapass debug color`、`scene_depth`、`main_depth`、`translucent_depth` 逐个检查缓冲区，再 `/litematicapass debug off` 看合并结果（水后的 schematic 应变暗，手部应在 schematic 上方）。

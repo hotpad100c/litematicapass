@@ -1,0 +1,13 @@
+{
+  "required": true,
+  "minVersion": "0.8",
+  "package": "ml.mypals.litematicapass.mixin.optifine",
+  "compatibilityLevel": "JAVA_8",
+  "client": [
+    "ShadersMixin",
+    "ShadersRenderMixin"
+  ],
+  "injectors": {
+    "defaultRequire": 1
+  }
+}

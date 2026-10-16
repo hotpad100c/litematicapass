@@ -10,6 +10,11 @@
 	"license": "CC0-1.0",
 	"icon": "assets/litematicapass/icon.png",
 	"environment": "client",
+	"entrypoints": {
+		"mm:early_risers": [
+			"ml.mypals.litematicapass.plugin.OptiFineMixins"
+		]
+	},
 	"mixins": [
 		"litematicapass.mixins.json"
 	],
