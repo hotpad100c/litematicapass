@@ -34,6 +34,7 @@ public final class SceneDepth {
 
 	/** The scene depth before the first-person hand is drawn (OptiFine draws the opaque hand before translucents). */
 	public static void captureBeforeHand() {
+		Stats.count("hook: before hand (renderHand0)");
 		if (wanted()) {
 			noHandReady = capture(NO_HAND);
 		}
@@ -41,6 +42,7 @@ public final class SceneDepth {
 
 	/** The scene depth after the solid phase (hand included) and before translucent surfaces are drawn. */
 	public static void captureBeforeTranslucents() {
+		Stats.count("hook: before translucents (preWater)");
 		if (wanted()) {
 			opaqueReady = capture(OPAQUE);
 		}
@@ -48,6 +50,7 @@ public final class SceneDepth {
 
 	/** The final scene depth, with translucent surfaces (and a translucent held item), before the composite passes. */
 	public static void captureFinal() {
+		Stats.count("hook: final depth (renderCompositeFinal)");
 		if (wanted()) {
 			finalReady = capture(FINAL);
 		}
@@ -56,6 +59,7 @@ public final class SceneDepth {
 	private static boolean capture(Gpu.Texture copy) {
 		Gpu.Texture source = Gpu.boundDepthTexture(GL30.GL_READ_FRAMEBUFFER);
 		if (source == null) {
+			Stats.count("capture failed: no depth texture bound");
 			if (!warned) {
 				warned = true;
 				LitematicaPass.LOGGER.warn("The shader pack's framebuffer has no depth texture where expected; the schematic may show through the scene");

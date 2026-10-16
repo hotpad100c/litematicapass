@@ -8,7 +8,9 @@
     "EntityRendererMixin",
     "GlStateManagerMixin",
     "litematica.LitematicaRendererMixin",
-    "litematica.RenderHandlerMixin"
+    "litematica.RenderGlobalSchematicMixin",
+    "litematica.RenderHandlerMixin",
+    "litematica.VboRenderListSchematicMixin"
   ],
   "injectors": {
     "defaultRequire": 1

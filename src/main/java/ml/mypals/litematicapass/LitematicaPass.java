@@ -1,13 +1,16 @@
 package ml.mypals.litematicapass;
 
 import ml.mypals.litematicapass.compat.OptiFineCompat;
+import ml.mypals.litematicapass.plugin.OptiFineMixins;
 import ml.mypals.litematicapass.render.DebugView;
+import ml.mypals.litematicapass.render.Stats;
 import net.minecraft.client.Minecraft;
 import net.minecraft.util.text.TextComponentString;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import java.util.Locale;
+import java.util.Map;
 
 public final class LitematicaPass {
 	public static final String MOD_ID = "litematicapass";
@@ -28,7 +31,11 @@ public final class LitematicaPass {
 			return false;
 		}
 		if (words.length < 2 || !words[1].equalsIgnoreCase("debug")) {
-			feedback("Usage: " + COMMAND + " debug [view]");
+			feedback("Usage: " + COMMAND + " debug [view|status]");
+			return true;
+		}
+		if (words.length == 3 && words[2].equalsIgnoreCase("status")) {
+			status();
 			return true;
 		}
 		if (words.length == 2) {
@@ -51,6 +58,19 @@ public final class LitematicaPass {
 		}
 		feedback("Unknown debug view: " + id);
 		return true;
+	}
+
+	/** What OptiFine reports and how often each step ran since the last status (see Stats). */
+	private static void status() {
+		feedback("OptiFabric loaded: " + OptiFineCompat.LOADED + ", shader pack in use: " + OptiFineCompat.isPackInUse()
+			+ ", OptiFine mixins registered: " + OptiFineMixins.registered());
+		if (Stats.counts().isEmpty()) {
+			feedback("  nothing ran since the last status");
+		}
+		for (Map.Entry<String, Long> entry : Stats.counts().entrySet()) {
+			feedback("  " + entry.getKey() + ": " + entry.getValue());
+		}
+		Stats.reset();
 	}
 
 	private static void feedback(String text) {

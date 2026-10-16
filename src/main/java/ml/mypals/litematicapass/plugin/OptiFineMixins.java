@@ -11,10 +11,18 @@ import org.spongepowered.asm.mixin.Mixins;
  * The {@code mm:early_risers} entrypoint only runs when a mod brings Fabric ASM, as OptiFabric does.
  */
 public final class OptiFineMixins implements Runnable {
+	private static boolean registered;
+
+	/** Whether the OptiFine mixin configuration was registered (for the debug status). */
+	public static boolean registered() {
+		return registered;
+	}
+
 	@Override
 	public void run() {
 		if (FabricLoader.getInstance().isModLoaded("optifabric")) {
 			Mixins.addConfiguration("litematicapass.optifine.mixins.json");
+			registered = true;
 		}
 	}
 }

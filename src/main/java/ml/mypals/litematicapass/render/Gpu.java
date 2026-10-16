@@ -370,7 +370,13 @@ final class Gpu {
 
 		private static int compileShader(int type, String source) {
 			int shader = GL20.glCreateShader(type);
-			GL20.glShaderSource(shader, source);
+			// LWJGL 2 turns a CharSequence into bytes by keeping each char's low byte, so the Chinese comments of the
+			// shaders came out as garbage, some of it NUL, and the driver saw the source end early. GLSL is ASCII anyway:
+			// blank anything else (only comments have it) and hand over the bytes.
+			byte[] bytes = source.replaceAll("[^\\x00-\\x7F]", " ").getBytes(StandardCharsets.US_ASCII);
+			ByteBuffer buffer = BufferUtils.createByteBuffer(bytes.length);
+			buffer.put(bytes).flip();
+			GL20.glShaderSource(shader, buffer);
 			GL20.glCompileShader(shader);
 			if (GL20.glGetShaderi(shader, GL20.GL_COMPILE_STATUS) == GL11.GL_FALSE) {
 				throw new IllegalStateException("Could not compile shader: " + GL20.glGetShaderInfoLog(shader, 4096));
@@ -506,5 +512,9 @@ final class Gpu {
 		GL30.glBindFramebuffer(GL30.GL_DRAW_FRAMEBUFFER, drawFramebuffer);
 		GL30.glBindFramebuffer(GL30.GL_READ_FRAMEBUFFER, readFramebuffer);
 		GL11.glViewport(viewport[0], viewport[1], viewport[2], viewport[3]);
+		int error = GL11.glGetError();
+		if (error != GL11.GL_NO_ERROR) {
+			Stats.count("GL error 0x" + Integer.toHexString(error) + " after " + pipeline.fragmentShader);
+		}
 	}
 }

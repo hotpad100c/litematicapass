@@ -37,6 +37,7 @@ public final class SchematicTarget {
 	public static void begin() {
 		if (bypassDepth++ == 0) {
 			bypassApplied = isActive();
+			Stats.count(bypassApplied ? "routed sections" : "unrouted sections (no shader pack or shadow pass)");
 			if (bypassApplied) {
 				// Prepare while OptiFine's framebuffer is still bound: the seed reads its depth, and switching
 				// OptiFine's program sets that framebuffer's draw buffers.
@@ -87,8 +88,10 @@ public final class SchematicTarget {
 	/** Merge the independent target onto Minecraft's framebuffer and reset the per-frame state. */
 	public static void compositeAndReset() {
 		try {
+			Stats.count("merge calls");
 			Gpu.Output main = Gpu.mainOutput();
 			if (main == null) {
+				Stats.count("merge skipped: Minecraft has no framebuffer");
 				return;
 			}
 			if (DebugView.mode() != DebugView.Mode.OFF && isActive()) {
@@ -98,9 +101,13 @@ public final class SchematicTarget {
 					Gpu.clear(TARGET);
 				}
 				DebugView.draw(main, TARGET);
+				Stats.count("debug view drawn");
 			} else if (TARGET.framebuffer != 0 && usedThisFrame) {
 				SchematicComposite.draw(main, TARGET);
 				compositedFrames++;
+				Stats.count("merged");
+			} else if (DebugView.mode() != DebugView.Mode.OFF) {
+				Stats.count("debug view skipped: not active (no shader pack or shadow pass)");
 			}
 		} finally {
 			preparedThisFrame = false;
