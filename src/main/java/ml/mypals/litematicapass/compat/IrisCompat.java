@@ -37,4 +37,9 @@ public final class IrisCompat {
 			IrisHooks.setRenderingLevel(renderingLevel);
 		}
 	}
+
+	/** Whether the world depth the pack writes is reversed Z (near = 1); the screen shaders must match it. */
+	public static boolean packUsesReversedDepth() {
+		return LOADED && IrisHooks.packUsesReversedDepth();
+	}
 }

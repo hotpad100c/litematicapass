@@ -3,6 +3,7 @@ package ml.mypals.litematicapass.render;
 import com.mojang.blaze3d.pipeline.RenderTarget;
 import com.mojang.blaze3d.pipeline.TextureTarget;
 import ml.mypals.litematicapass.LitematicaPass;
+import ml.mypals.litematicapass.compat.IrisCompat;
 import net.minecraft.client.Minecraft;
 import org.joml.Vector2i;
 import org.jspecify.annotations.Nullable;
@@ -72,7 +73,8 @@ import com.mojang.renderpearl.api.pipeline.DepthStencilState;
 final class Gpu {
 	/**
 	 * The depth a cleared depth buffer holds. 26.2 switched to reversed Z (near = 1, far = 0); older versions use
-	 * near = 0, far = 1. The shaders see {@code STANDARD_DEPTH} on the older versions and compare "closeness".
+	 * near = 0, far = 1. The shaders see {@code STANDARD_DEPTH} and compare "closeness" whenever the working depth
+	 * is standard Z, which on 26.2 and later is up to the shader pack (see {@link IrisCompat#packUsesReversedDepth}).
 	 */
 	//? if >=26.2 {
 	static final double FAR_DEPTH = 0.0;
@@ -321,6 +323,11 @@ final class Gpu {
 			*///?}
 		}
 		builder.withBindGroupLayout(layout.build()).withPrimitiveTopology(PrimitiveTopology.TRIANGLES);
+		// Iris up to 1.11.2 undoes Minecraft's reversed Z for the whole frame, packs included: the world depth is
+		// then standard Z (near = 0) and the shaders must read it that way.
+		if (!IrisCompat.packUsesReversedDepth()) {
+			builder.withShaderDefine("STANDARD_DEPTH");
+		}
 		//?} else {
 		/*for (String name : samplers) {
 			builder.withSampler(name);
