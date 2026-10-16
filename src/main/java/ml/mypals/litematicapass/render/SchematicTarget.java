@@ -1,52 +1,49 @@
 package ml.mypals.litematicapass.render;
 
-import com.mojang.blaze3d.pipeline.RenderTarget;
-import com.mojang.blaze3d.pipeline.TextureTarget;
-import ml.mypals.litematicapass.compat.IrisCompat;
+import ml.mypals.litematicapass.LitematicaPass;
+import ml.mypals.litematicapass.compat.OptiFineCompat;
 
 /**
- * 一个独立的 颜色+深度 渲染目标，在激活光影包时，schematic 的绘制会被重定向到这里。
- * 其深度从主深度初始化，因此世界仍然会遮挡 schematic；
- * 在帧结束时，渲染结果会被深度合并回主目标上（ {@link SchematicComposite}）。
+ * 一个独立的 颜色+深度 渲染目标，在激活光影包（OptiFine）时，schematic 的绘制会被重定向到这里。
+ * 其深度从光影包的场景深度初始化，因此世界仍然会遮挡 schematic；
+ * 在 OptiFine 的合成（composite/final）结束后，渲染结果会被深度合并到 Minecraft 的帧缓冲上（{@link SchematicComposite}）。
+ * 尺寸跟随 OptiFine 的场景深度（它按自己的渲染分辨率绘制世界）。
  */
 public final class SchematicTarget {
-	private static TextureTarget target;
+	private static final Gpu.Target TARGET = new Gpu.Target();
 
 	private static int bypassDepth;
 	private static boolean bypassApplied;
-	private static boolean bypassSaved;
-	private static boolean skipExtensionSaved;
+	private static Object savedProgram;
 
 	private static boolean preparedThisFrame;
-	private static boolean preparing;
-	private static long compositedFrames;
-
-	/** How many frames merged the independent target onto the main one (for the debug command and checks). */
-	public static long compositedFrames() {
-		return compositedFrames;
-	}
 	private static boolean usedThisFrame;
+	private static long compositedFrames;
+	private static boolean warnedNoDepth;
 	private static final Runnable NOTHING = () -> {};
 	private static Runnable restoreOutput = NOTHING;
 
 	private SchematicTarget() {}
 
+	/** How many frames merged the independent target onto the main one (for the debug command and checks). */
+	public static long compositedFrames() {
+		return compositedFrames;
+	}
+
 	public static boolean isActive() {
-		return IrisCompat.isPackInUse() && !IrisCompat.isRenderingShadowPass();
+		return OptiFineCompat.isPackInUse() && !OptiFineCompat.isRenderingShadowPass();
 	}
 
 	public static void begin() {
 		if (bypassDepth++ == 0) {
 			bypassApplied = isActive();
 			if (bypassApplied) {
-				bypassSaved = IrisCompat.bypass();
-				IrisCompat.setBypass(true);
-				// Litematica's chunk meshes are built in the plain BLOCK format (see ChunkRendererSchematicVboMixin);
-				// make sure Iris does not widen the vertex format the pipeline is bound with either.
-				skipExtensionSaved = IrisCompat.skipExtension();
-				IrisCompat.setSkipExtension(true);
-				// Before 1.21.5 draws go to whatever framebuffer is bound; bind ours for the routed section.
-				restoreOutput = Gpu.bindForDrawing(prepareForDraw());
+				// Prepare while OptiFine's framebuffer is still bound: the seed reads its depth, and switching
+				// OptiFine's program sets that framebuffer's draw buffers.
+				Gpu.Target target = prepareForDraw();
+				savedProgram = OptiFineCompat.beginBypass();
+				// Minecraft 1.12 draws into whatever framebuffer is bound; bind ours for the routed section.
+				restoreOutput = Gpu.bindForDrawing(target);
 			}
 		}
 	}
@@ -55,8 +52,8 @@ public final class SchematicTarget {
 		if (bypassDepth > 0 && --bypassDepth == 0 && bypassApplied) {
 			restoreOutput.run();
 			restoreOutput = NOTHING;
-			IrisCompat.setBypass(bypassSaved);
-			IrisCompat.setSkipExtension(skipExtensionSaved);
+			OptiFineCompat.endBypass(savedProgram);
+			savedProgram = null;
 			bypassApplied = false;
 		}
 	}
@@ -65,105 +62,50 @@ public final class SchematicTarget {
 		return bypassDepth > 0 && bypassApplied;
 	}
 
-	public static RenderTarget targetFor(RenderTarget main) {
-		// Preparing the target runs Minecraft code that may ask for the main target itself (before 1.21.6 that is
-		// routed here, see MinecraftMixin); it must get the real one.
-		return isRouting() && !preparing ? prepareForDraw() : main;
-	}
-
-	public static RenderTarget prepareForDraw() {
-		preparing = true;
-		try {
-			ensureTarget();
-			if (!preparedThisFrame) {
-				RenderTarget main = Gpu.mainTarget();
-				Gpu.clear(target);
-				DepthSeed.seed(main, target);
-				preparedThisFrame = true;
+	private static Gpu.Target prepareForDraw() {
+		if (!preparedThisFrame) {
+			Gpu.Texture scene = SceneDepth.live();
+			if (scene != null) {
+				Gpu.ensureTarget(TARGET, scene.width, scene.height);
+			} else {
+				Gpu.Output main = Gpu.mainOutput();
+				Gpu.ensureTarget(TARGET, main != null ? main.width : 1, main != null ? main.height : 1);
 			}
-		} finally {
-			preparing = false;
+			Gpu.clear(TARGET);
+			if (scene != null) {
+				DepthSeed.seed(TARGET);
+			} else if (!warnedNoDepth) {
+				warnedNoDepth = true;
+				LitematicaPass.LOGGER.warn("No scene depth to seed the schematic target from; the schematic will show through the scene");
+			}
+			preparedThisFrame = true;
 		}
 		usedThisFrame = true;
-		return target;
+		return TARGET;
 	}
 
-	private static void ensureTarget() {
-		int width = Gpu.sceneWidth();
-		int height = Gpu.sceneHeight();
-		if (target == null) {
-			target = Gpu.colorDepthTarget("litematicapass_schematic", width, height);
-		} else if (target.width != width || target.height != height) {
-			Gpu.resize(target, width, height);
-		}
-	}
-
-	/**
-	 * Draws the entities and block entities submitted after the terrain (see SchematicEntities.pendingAtEndOfFrame), if
-	 * there are any: before the schematic overlay, whose boxes would hide them, or else at the end of the frame.
-	 */
-	public static void drawPendingEntities() {
-		if (!SchematicEntities.pendingAtEndOfFrame()) {
-			return;
-		}
-		boolean saved = IrisCompat.bypass();
-		IrisCompat.setBypass(true);
-		try {
-			SchematicEntities.drawPending(prepareForDraw());
-		} finally {
-			IrisCompat.setBypass(saved);
-		}
-	}
-
-	/** Merge the independent target onto the main one and reset the per-frame state. */
+	/** Merge the independent target onto Minecraft's framebuffer and reset the per-frame state. */
 	public static void compositeAndReset() {
 		try {
-			drawPendingEntities();
+			Gpu.Output main = Gpu.mainOutput();
+			if (main == null) {
+				return;
+			}
 			if (DebugView.mode() != DebugView.Mode.OFF && isActive()) {
-				showDebugView();
-			} else if (target != null && usedThisFrame) {
-				RenderTarget main = Gpu.mainTarget();
-				boolean saved = IrisCompat.bypass();
-				IrisCompat.setBypass(true);
-				try {
-					SchematicComposite.draw(main, target);
-					compositedFrames++;
-				} finally {
-					IrisCompat.setBypass(saved);
+				if (!usedThisFrame) {
+					Gpu.Texture scene = SceneDepth.live();
+					Gpu.ensureTarget(TARGET, scene != null ? scene.width : main.width, scene != null ? scene.height : main.height);
+					Gpu.clear(TARGET);
 				}
+				DebugView.draw(main, TARGET);
+			} else if (TARGET.framebuffer != 0 && usedThisFrame) {
+				SchematicComposite.draw(main, TARGET);
+				compositedFrames++;
 			}
 		} finally {
 			preparedThisFrame = false;
 			usedThisFrame = false;
 			SceneDepth.endFrame();
-			SchematicEntities.endFrame();
 		}
-	}
-
-	/** Replace the frame with one of the debug views; the independent target is cleared first if nothing used it. */
-	private static void showDebugView() {
-		RenderTarget main = Gpu.mainTarget();
-		ensureTarget();
-		if (!usedThisFrame) {
-			Gpu.clear(target);
-		}
-		boolean saved = IrisCompat.bypass();
-		IrisCompat.setBypass(true);
-		try {
-			DebugView.draw(main, target);
-		} finally {
-			IrisCompat.setBypass(saved);
-		}
-	}
-
-	public static void close() {
-		if (target != null) {
-			target.destroyBuffers();
-			target = null;
-		}
-		preparedThisFrame = false;
-		usedThisFrame = false;
-		SceneDepth.close();
-		SchematicEntities.close();
 	}
 }

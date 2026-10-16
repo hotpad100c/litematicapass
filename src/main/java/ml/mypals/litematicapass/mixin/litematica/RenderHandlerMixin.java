@@ -1,6 +1,6 @@
 package ml.mypals.litematicapass.mixin.litematica;
 
-import fi.dy.masa.litematica.event.RenderHandler;
+import litematica.event.RenderHandler;
 import ml.mypals.litematicapass.render.SchematicTarget;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
@@ -8,17 +8,17 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 /**
- * 重定向 Litematica 的选区、校验器等的渲染。
- * 不捕获参数，所以不依赖各个 Litematica 版本中 onRenderWorldLast 的参数列表（0.26 及更早叫 onRenderWorldLastAdvanced）。
+ * 重定向 Litematica 的选区、校验器等的渲染，以及关闭 "Better Render Order" 时整个 schematic 的渲染（renderSchematicWorld）。
+ * malilib 在 renderWorldPass 读取 renderHand 字段处触发这个事件：在 OptiFine 下是半透明之后、renderCompositeFinal 之前。
  */
 @Mixin(value = RenderHandler.class, remap = false)
 public class RenderHandlerMixin {
-	@Inject(method = { "onRenderWorldLast", "onRenderWorldLastAdvanced" }, at = @At("HEAD"))
+	@Inject(method = "onPostWorldRender", at = @At("HEAD"))
 	private void litematicapass$beginBoxes(CallbackInfo ci) {
 		SchematicTarget.begin();
 	}
 
-	@Inject(method = { "onRenderWorldLast", "onRenderWorldLastAdvanced" }, at = @At("RETURN"))
+	@Inject(method = "onPostWorldRender", at = @At("RETURN"))
 	private void litematicapass$endBoxes(CallbackInfo ci) {
 		SchematicTarget.end();
 	}

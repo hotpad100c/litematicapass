@@ -1,0 +1,74 @@
+plugins {
+	id 'fabric-loom' version '1.4.5'
+	id 'ploceus' version '1.4.2'
+}
+
+version = "${project.property('mod.version')}+1.12.2"
+group = project.property('mod.group')
+base {
+	archivesName = project.property('mod.id')
+}
+
+repositories {
+	maven { name = 'Ornithe Releases'; url = 'https://maven.ornithemc.net/releases' }
+	exclusiveContent {
+		forRepository { maven { name = 'Modrinth'; url = 'https://api.modrinth.com/maven' } }
+		filter { includeGroup 'maven.modrinth' }
+	}
+}
+
+dependencies {
+	minecraft "com.mojang:minecraft:${project.minecraft_version}"
+	// The names Litematica and MaLiLib for Ornithe 1.12.2 are written against.
+	mappings loom.layered {
+		addLayer ploceus.mcpMappings('stable', '1.12', '39')
+	}
+	modImplementation "net.fabricmc:fabric-loader:${project.fabric_loader_version}"
+	// What Litematica and MaLiLib need of Ornithe's standard libraries (the module versions of OSL 0.11.3, which they
+	// are built with). ploceus.dependOsl no longer resolves these gen1 modules, so they are named here.
+	for (module in [
+		'core:0.5.0',
+		'entrypoints:0.4.2+mc13w16a-04192037-mc1.14.4',
+		'lifecycle-events:0.5.2+mc13w36a-09051446-mc1.13',
+		'resource-loader:0.2.8+mc13w26a-mc1.12.2'
+	]) {
+		modLocalRuntime "net.ornithemc.osl:${module}"
+	}
+
+	modImplementation "maven.modrinth:litematica:${project.property('deps.litematica')}"
+	modImplementation "maven.modrinth:malilib:${project.property('deps.malilib')}"
+	// OptiFine (loaded through Legacy OptiFabric) is not a build dependency: the mixins into its classes name them as
+	// strings, and the rest of the mod only reaches it through mixins. Legacy OptiFabric does not run in the
+	// development environment.
+}
+
+processResources {
+	def props = [
+		'id'     : project.property('mod.id'),
+		'name'   : project.property('mod.name'),
+		'version': project.version
+	]
+	inputs.properties props
+	filesMatching('fabric.mod.json') {
+		expand props
+	}
+}
+
+tasks.withType(JavaCompile).configureEach {
+	it.options.encoding = 'UTF-8'
+	it.options.release = 8
+}
+
+java {
+	sourceCompatibility = JavaVersion.VERSION_1_8
+	targetCompatibility = JavaVersion.VERSION_1_8
+}
+
+loom {
+	runs {
+		client {
+			// Logs every class a mixin is applied to, so a dev run shows ours applied.
+			vmArg '-Dmixin.debug.verbose=true'
+		}
+	}
+}

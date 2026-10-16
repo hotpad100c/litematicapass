@@ -1,27 +1,22 @@
 {
   "required": true,
+  "minVersion": "0.8",
   "package": "ml.mypals.litematicapass.mixin",
   "plugin": "ml.mypals.litematicapass.plugin.LitematicaPassMixinPlugin",
-  "compatibilityLevel": "${java}",
+  "compatibilityLevel": "JAVA_8",
   "client": [
+    "EntityPlayerSPMixin",
+    "EntityRendererMixin",
     "GlStateManagerMixin",
-    "LevelRendererMixin",
-    "MinecraftAccessor",
-    "MinecraftMixin",
-    "StrictValidationMixin",
-    "iris.IrisRenderingPipelineMixin",
-    "iris.IrisShaderOverrideMixin",
-    "litematica.ChunkRenderBatchDrawMixin",
-    "litematica.ChunkRendererSchematicVboMixin",
-    "litematica.LegacyTerrainFixUniformMixin",
     "litematica.LitematicaRendererMixin",
     "litematica.RenderHandlerMixin",
-    "litematica.RenderUtilsMixin"
+    "optifine.ShadersMixin",
+    "optifine.ShadersRenderMixin"
   ],
   "injectors": {
     "defaultRequire": 1
   },
   "overwrites": {
     "requireAnnotations": true
-	}
+  }
 }

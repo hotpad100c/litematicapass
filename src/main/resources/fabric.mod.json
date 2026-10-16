@@ -3,35 +3,24 @@
 	"id": "${id}",
 	"version": "${version}",
 	"name": "${name}",
-	"description": "Renders Litematica schematics into an independent render target so shader packs (Iris) no longer affect them.",
+	"description": "Renders Litematica schematics into an independent render target so shader packs (OptiFine) no longer affect them.",
 	"authors": [
 		"Ryan100C"
 	],
-	"contact": {
-		"homepage": "https://fabricmc.net/",
-		"sources": "https://github.com/FabricMC/fabric-example-mod"
-	},
 	"license": "CC0-1.0",
 	"icon": "assets/litematicapass/icon.png",
 	"environment": "client",
-	"entrypoints": {
-		"client": [
-			"ml.mypals.litematicapass.LitematicaPass"
-		]
-	},
 	"mixins": [
 		"litematicapass.mixins.json"
 	],
 	"depends": {
-		"fabricloader": "*",
-		"minecraft": "${minecraft}",
-		"java": ">=${java}",
-		"fabric-api": "*",
-		"litematica": "*",
+		"fabricloader": ">=0.15.0",
+		"minecraft": "1.12.x",
+		"java": ">=8",
+		"litematica": ">=0.40.0",
 		"malilib": "*"
 	},
 	"suggests": {
-		"iris": "*",
-		"sodium": "*"
+		"optifabric": "*"
 	}
 }
