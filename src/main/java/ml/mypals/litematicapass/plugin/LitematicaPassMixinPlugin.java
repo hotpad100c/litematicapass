@@ -47,4 +47,29 @@ public final class LitematicaPassMixinPlugin implements IMixinConfigPlugin {
 		}
 		return true;
 	}
+
+	@Override
+	public String getRefMapperConfig() {
+		return null;
+	}
+
+	@Override
+	public void acceptTargets(Set<String> myTargets, Set<String> otherTargets) {
+	}
+
+
+	@Override
+	public List<String> getMixins() {
+		return null;
+	}
+
+
+	@Override
+	public void preApply(String targetClassName, ClassNode targetClass, String mixinClassName, IMixinInfo mixinInfo) {
+	}
+
+
+	@Override
+	public void postApply(String targetClassName, ClassNode targetClass, String mixinClassName, IMixinInfo mixinInfo) {
+	}
 }
