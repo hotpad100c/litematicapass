@@ -43,3 +43,7 @@ replay_*.log
 .allomos/
 /AGENTS.md
 /CLAUDE.md
+/.agents/
+/.claude/
+/.github/
+/skills-lock.json
